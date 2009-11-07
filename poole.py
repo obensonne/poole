@@ -34,6 +34,7 @@ import re
 import shlex
 import shutil
 import sys
+import urlparse
 
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
@@ -190,6 +191,8 @@ try:
 except ImportError:
     textile = None
 
+PAGE_FILE_EXTS = (".md", ".markdown", ".textile", ".html")
+
 def convert(content, markup):
     """Convert content of given type into HTML."""
     
@@ -315,7 +318,7 @@ class Page(object):
         
         base, ext = os.path.splitext(path)
         base = base[len(strip):].lstrip(os.path.sep)
-        self.url = "%s.html" % base.replace(os.path.sep, "/") # '\' -> '/'
+        self.url = "%s.html" % base.replace(os.path.sep, "/")
         self.path = "%s.html" % base
         
         self.macros = MacroDict(site_macros, self)
@@ -337,7 +340,7 @@ class Page(object):
         # page name (fall back to file name if macro 'name' is not set)
         if not MACRO_NAME in self.macros:
             self.macros[MACRO_NAME] = os.path.basename(base)
-            print("no 'name' macro for %s, using filename as name" % self.path)
+            print("warning: no 'name' macro for %s, using filename" % self.path)
         self.name = self.macros[MACRO_NAME]
         
         # convert to HTML
@@ -363,39 +366,39 @@ def site_macros(project):
 # commands
 #------------------------------------------------------------------------------
 
-def build(project, enc_in, enc_out):
+def build(project, base_url, enc_in, enc_out):
     """Build a site project."""
     
-    dir_pages = opj(project, "pages")
-    dir_deploy = opj(project, "deploy")
-    dir_static = opj(project, "static")
+    dir_in = opj(project, "input")
+    dir_out = opj(project, "output")
     page_html = opj(project, "page.html")
 
-    for pelem in (page_html, dir_pages, dir_deploy, dir_static):
+    for pelem in (page_html, dir_in, dir_out):
         if not os.path.exists(pelem):
             print("error: %s does not exist, looks like project has not been "
                   "initialized, abort" % pelem)
             sys.exit(1)
 
-    # recreate deploy dir and fill it with static content
-    shutil.rmtree(dir_deploy, ignore_errors=True)
-    os.mkdir(dir_deploy)
-    for root, dirs, files in os.walk(dir_static):
-        for elem in (dirs):
-            shutil.copytree(opj(root, elem), opj(dir_deploy, elem))
-        for elem in (files):
-            shutil.copy(opj(root, elem), opj(dir_deploy, elem))
-        break
+    # recreate output dir
+    shutil.rmtree(dir_out, ignore_errors=True)
+    os.mkdir(dir_out)
     
     # site macros
     macros = site_macros(project)
         
     # read and render pages
     pages = []
-    for root, dirs, files in os.walk(dir_pages):
+    for cwd, dirs, files in os.walk(dir_in):
+        cwd_site = cwd.lstrip(dir_in).lstrip("/")
+        for dir in dirs:
+            os.mkdir(opj(dir_out, cwd_site, dir))
         for f in files:
-            page = Page(opj(root, f), dir_pages, macros, enc_in)
-            pages.append(page)
+            if os.path.splitext(f)[1] in PAGE_FILE_EXTS:
+                page = Page(opj(cwd, f), dir_in, macros, enc_in)
+                page.macros["base_url"] = base_url
+                pages.append(page)
+            else:
+                shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
 
     # make list of pages available in macro dictionaries
     MacroDict.pages = pages
@@ -417,11 +420,19 @@ def build(project, enc_in, enc_out):
             if macro in (MACRO_SOURCE,): continue
             html = re.sub(RE_VAR % macro, page.macros[macro], html)
         
+        # make relative links absolute
+        links = re.findall(r'href="([^#/][^"]*)"', html)
+        print links
+        for link in links:
+            based = urlparse.urljoin(base_url, link)
+            print based
+            html = html.replace('href="%s"' % link, 'href="%s"' % based)
+        
         raw = SOURCE % ''.join(page.raw).strip('\n')
         html = re.sub(RE_VAR % MACRO_SOURCE, raw, html)
         
         # write HTML page
-        with codecs.open(opj(dir_deploy, page.path), 'w', enc_out) as fp:
+        with codecs.open(opj(dir_out, page.path), 'w', enc_out) as fp:
             fp.write(html)
 
     print("success: built project, use -s option to serve it now")
@@ -436,12 +447,11 @@ def init(project):
         print("error: project dir %s is not empty, abort" % project)
         sys.exit(1)
     
-    os.mkdir(opj(project, "pages"))
-    os.mkdir(opj(project, "static"))
-    os.mkdir(opj(project, "deploy"))
+    os.mkdir(opj(project, "input"))
+    os.mkdir(opj(project, "output"))
     
     for page_file, page_content in EXAMPLE_PAGES.items():
-        with open(opj(project, "pages", page_file), 'w') as fp:
+        with open(opj(project, "input", page_file), 'w') as fp:
             fp.write(page_content)
 
     with open(opj(project, "page.html"), 'w') as fp:
@@ -452,9 +462,9 @@ def init(project):
 def serve(project, port):
     """Temporary serve a site project."""
     
-    root = opj(project, "deploy")
+    root = opj(project, "output")
     if not os.listdir(project):
-        print("error: deploy dir is empty (build project first!), abort")
+        print("error: output dir is empty (build project first!), abort")
         sys.exit(1)
     
     os.chdir(root)
@@ -484,6 +494,8 @@ def get_options():
                   help="serve project")
     
     og = optparse.OptionGroup(op, "Build options")
+    og.add_option("", "--base-url", default="/", metavar="URL",
+                  help="base url for relative links (default: /)")
     og.add_option("", "--input-enc", default="utf-8", metavar="ENC",
                   help="encoding of input pages (default: utf-8)")
     og.add_option("", "--output-enc", default="utf-8", metavar="ENC",
@@ -512,14 +524,14 @@ def get_options():
 
 def main():
     
-    options = get_options()
+    opts = get_options()
     
-    if options.init:
-        init(options.project)
-    if options.build:
-        build(options.project, options.input_enc, options.output_enc)
-    if options.serve:
-        serve(options.project, options.port)
+    if opts.init:
+        init(opts.project)
+    if opts.build:
+        build(opts.project, opts.base_url, opts.input_enc, opts.output_enc)
+    if opts.serve:
+        serve(opts.project, opts.port)
 
 if __name__ == '__main__':
     
