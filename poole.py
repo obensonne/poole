@@ -31,6 +31,7 @@ import os
 import os.path
 from os.path import join as opj
 import re
+from xml.sax.saxutils import escape as xcape
 import shlex
 import shutil
 import sys
@@ -58,9 +59,7 @@ SOURCE = """
 <!-- source of the original page file -->
 <hr style="margin-top: 1em;" />
 <span style="font-size: small;">Source of this page:</span>
-<xmp style="border: dotted black 1px; background: #eeeeec; font-size: small; padding: 0 1em 1em 1em;">
-%s
-</xmp>
+<pre>%s</pre>
 <!-- end: source of the original page file -->
 """
 
@@ -101,6 +100,12 @@ PAGE_HTML = """<html>
           color: gray;
           text-align: center;
           font-size: small;
+      }
+      pre {
+          border: dotted black 1px;
+          background: #eeeeec;
+          font-size: small;
+          padding: 1em;
       }
     </style>
 </head>
@@ -428,7 +433,7 @@ def build(project, base_url, enc_in, enc_out):
             print based
             html = html.replace('href="%s"' % link, 'href="%s"' % based)
         
-        raw = SOURCE % ''.join(page.raw).strip('\n')
+        raw = SOURCE % xcape(''.join(page.raw).strip('\n'))
         html = re.sub(RE_VAR % MACRO_SOURCE, raw, html)
         
         # write HTML page
