@@ -254,8 +254,6 @@ class MacroDict(dict):
         params = shlex.split(key)[1:] # does not work with unicode!
         #params = key.split(key)[1:]
         
-        #print ("macro: %s(%s)" % (name, ', '.join(params)))
-        
         macro = getattr(self.__macros, name, None)
         
         # function macro in macro module
@@ -427,10 +425,8 @@ def build(project, base_url, enc_in, enc_out):
         
         # make relative links absolute
         links = re.findall(r'href="([^#/][^"]*)"', html)
-        print links
         for link in links:
             based = urlparse.urljoin(base_url, link)
-            print based
             html = html.replace('href="%s"' % link, 'href="%s"' % based)
         
         raw = SOURCE % xcape(''.join(page.raw).strip('\n'))
