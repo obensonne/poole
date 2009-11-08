@@ -25,6 +25,7 @@
 from __future__ import with_statement
 
 import codecs
+import glob
 import inspect
 import optparse
 import os
@@ -382,9 +383,11 @@ def build(project, base_url, enc_in, enc_out):
                   "initialized, abort" % pelem)
             sys.exit(1)
 
-    # recreate output dir
-    shutil.rmtree(dir_out, ignore_errors=True)
-    os.mkdir(dir_out)
+    # prepare output dir
+    for fod in glob.glob(opj(dir_out, "*")):
+        shutil.rmtree(fod) 
+    if not os.path.exists(dir_out):
+        os.mkdir(dir_out)
     
     # site macros
     macros = site_macros(project)
@@ -393,8 +396,8 @@ def build(project, base_url, enc_in, enc_out):
     pages = []
     for cwd, dirs, files in os.walk(dir_in):
         cwd_site = cwd.lstrip(dir_in).lstrip("/")
-        for dir in dirs:
-            os.mkdir(opj(dir_out, cwd_site, dir))
+        for sdir in dirs:
+            os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
             if os.path.splitext(f)[1] in PAGE_FILE_EXTS:
                 page = Page(opj(cwd, f), dir_in, macros, enc_in)
