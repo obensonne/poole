@@ -440,7 +440,7 @@ def build(project, base_url, enc_in, enc_out):
         with codecs.open(opj(dir_out, page.path), 'w', enc_out) as fp:
             fp.write(html)
 
-    print("success: built project, use -s option to serve it now")
+    print("success: built project")
 
 def init(project):
     """Initialize a site project."""
