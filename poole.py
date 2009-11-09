@@ -66,7 +66,7 @@ SOURCE = """
 PAGE_HTML = """<html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
-    <title>my poole site</title>
+    <title>a poole site</title>
     <style type="text/css" id="internalStyle">
       body {
           font-family: sans;
@@ -112,7 +112,7 @@ PAGE_HTML = """<html>
 <body>
     <div id="box">
     <div id="header">
-         <h1>my poole site</h1>
+         <h1>a poole site</h1>
          <h2>{{ name }}</h2>
     </div>
     <div id="menu">
@@ -134,18 +134,13 @@ EXAMPLE_PAGES =  {
 # name: Home
 # menu_pos: 0
 
-Congratulations, you've successfully set up an initial *poole* site.
- 
-This page's source file is `index.markdown`. It is written in
+This page's source file is `index.markdown`, written in
 [markdown](http://daringfireball.net/projects/markdown/).
 
-The navigation menu above lists all pages having the *menu_pos* macro defined. 
+The navigation menu above links to all pages having the *menu_pos* macro defined. 
 
-Though the file is named `index`, the name shown above is **Home** because
-this page has the *name* macro defined to `Home`.
-
- * A list, nice.
- * Here's [another page](about.html) to read.
+This page's file name is `index` but the name shown above is **Home**.
+That's because this page has the *name* macro defined to `Home`.
 
 {{ %s }}
 """ % MACRO_SOURCE,
@@ -153,22 +148,25 @@ this page has the *name* macro defined to `Home`.
 "about.html": """
 <!-- name: About -->
 <!-- menu_pos: 5 -->
-<h1>A heading</h1>
-This page's source file is <tt>about.html</tt>, which is written in <b>HTML</b>.
-<h2>A sub heading</h2>
+<p>
+This page's source file is <tt>about.html</tt>, written in <b>HTML</b>.
+</p>
+<p>
 Did you read the <a href="barfoo.html">foobar</a>?
-
+</p>
 {{ %s }}
 """ % MACRO_SOURCE,
                   
 "barfoo.textile" : """
 # name: Foobar
 # foobaz: boo
-This page's soure file is @barfoo.textile@, which is written in "textile":http://textile.thresholdstate.com/.
+This page's soure file is @barfoo.textile@, written in "textile":http://textile.thresholdstate.com/.
 
 It does not show up in the menu, because it has no *menu_pos* macro defined.
 
 But it has defined a *foobaz* macro and it says {{ foobaz }}. Yes, it really says {{ foobaz }}.
+
+You can adjust the site layout in the file @page.html@.
 
 {{ %s }}
 """ % MACRO_SOURCE
