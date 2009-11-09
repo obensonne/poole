@@ -386,7 +386,10 @@ def build(project, base_url, enc_in, enc_out):
 
     # prepare output dir
     for fod in glob.glob(opj(dir_out, "*")):
-        shutil.rmtree(fod) 
+        if os.path.isdir(fod):
+            shutil.rmtree(fod)
+        else:
+            os.remove(fod)  
     if not os.path.exists(dir_out):
         os.mkdir(dir_out)
     
