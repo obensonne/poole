@@ -32,7 +32,6 @@ import os.path
 from os.path import join as opj
 import re
 from xml.sax.saxutils import escape as xcape
-import shlex
 import shutil
 import sys
 import urlparse
@@ -250,15 +249,19 @@ class MacroDict(dict):
         if key in self:
             return super(MacroDict, self).__getitem__(key)
         
-        name = key.split()[0]
-        params = shlex.split(key)[1:] # does not work with unicode!
-        #params = key.split(key)[1:]
+        # split macro into name and arguments
+        name = key.split(None, 1)[0]
+        kwargs = {}
+        for key, value in [kv.split("=", 1) for kv in key.split()[1:]]:
+            if "," in value:
+                value = [v.strip() for v in value.split(",")]
+            kwargs[str(key)] = value
         
         macro = getattr(self.__macros, name, None)
-        
+
         # function macro in macro module
         if inspect.isfunction(macro):
-            return macro(self.pages, self.__page, *params)
+            return macro(self.pages, self.__page, **kwargs)
         
         # string macro in macro module
         if not macro is None:
@@ -267,10 +270,10 @@ class MacroDict(dict):
         # built-in macro
         macro = getattr(self, "_builtin_%s" % name, None)
         if macro:
-            return macro(*params)
+            return macro(**kwargs)
         
         # macro not defined -> warning
-        print("warning: page %s uses macro '%s' which is not defined" %
+        print("warning: page %s uses undefined macro '%s'" %
               (self.__page.path, name))
         return ""
         
