@@ -399,7 +399,7 @@ def build(project, base_url, enc_in, enc_out):
     # read and render pages
     pages = []
     for cwd, dirs, files in os.walk(dir_in):
-        cwd_site = cwd.lstrip(dir_in).lstrip("/")
+        cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
         for sdir in dirs:
             os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
