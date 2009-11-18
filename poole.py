@@ -431,10 +431,11 @@ def build(project, base_url, enc_in, enc_out):
             html = re.sub(RE_VAR % macro, page.macros[macro], html)
         
         # make relative links absolute
-        links = re.findall(r'href="([^#/][^"]*)"', html)
+        links = re.findall(r'(?:src|href)="([^#/][^"]*)"', html)
         for link in links:
             based = urlparse.urljoin(base_url, link)
             html = html.replace('href="%s"' % link, 'href="%s"' % based)
+            html = html.replace('src="%s"' % link, 'src="%s"' % based)
         
         raw = SOURCE % xcape(''.join(page.raw).strip('\n'))
         html = re.sub(RE_VAR % MACRO_SOURCE, raw, html)
