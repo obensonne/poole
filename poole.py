@@ -45,7 +45,7 @@ from BaseHTTPServer import HTTPServer
 # constants
 #------------------------------------------------------------------------------
 
-RE_VAR = r'{{ *%s *}}'
+RE_MACRO = r'{{ *%s *}}'
 
 MACRO_NAME = "name"
 MACRO_SOURCE = "source"
@@ -233,7 +233,6 @@ class MacroDict(dict):
     If all of these fail, a warning string is returned.
     
     """
-    
     pages = None
     
     def __init__(self, macros, page):
@@ -321,8 +320,8 @@ class Page(object):
         @param strip: portion of path to strip from `path` for deployment
         @param site_macros: site macros
         @param enc_in: encoding of page input file
-        """
         
+        """
         base, ext = os.path.splitext(path)
         base = base[len(strip):].lstrip(os.path.sep)
         self.url = "%s.html" % base.replace(os.path.sep, "/")
@@ -432,15 +431,15 @@ def build(project, base_url, enc_in, enc_out):
     for page in pages:
         
         # expand reserved macros
-        html = re.sub(RE_VAR % MACRO_CONTENT, page.content, skeleton)
-        html = re.sub(RE_VAR % MACRO_ENCODING, enc_out, html)
+        html = re.sub(RE_MACRO % MACRO_CONTENT, page.content, skeleton)
+        html = re.sub(RE_MACRO % MACRO_ENCODING, enc_out, html)
         
         # expand other macros
-        macros_used = re.findall(RE_VAR % "([^}]+)", html)
+        macros_used = re.findall(RE_MACRO % "([^}]+)", html)
         for macro in macros_used:
             macro = macro.strip()
             if macro in (MACRO_SOURCE,): continue
-            html = re.sub(RE_VAR % macro, page.macros[macro], html)
+            html = re.sub(RE_MACRO % macro, page.macros[macro], html)
         
         # make relative links absolute
         links = re.findall(r'href="([^#/][^"]*)"', html)
@@ -449,7 +448,7 @@ def build(project, base_url, enc_in, enc_out):
             html = html.replace('href="%s"' % link, 'href="%s"' % based)
         
         raw = SOURCE % xcape(''.join(page.raw).strip('\n'))
-        html = re.sub(RE_VAR % MACRO_SOURCE, raw, html)
+        html = re.sub(RE_MACRO % MACRO_SOURCE, raw, html)
         
         # write HTML page
         with codecs.open(opj(dir_out, page.path), 'w', enc_out) as fp:
