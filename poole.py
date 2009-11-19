@@ -25,6 +25,7 @@
 from __future__ import with_statement
 
 import codecs
+from ConfigParser import SafeConfigParser
 import glob
 import inspect
 import optparse
@@ -131,8 +132,9 @@ PAGE_HTML = """<html>
 
 EXAMPLE_PAGES =  {
 "index.markdown" : """
-# name: Home
-# menu_pos: 0
+name: Home
+menu_pos: 0
+--- EOM ---
 
 This page's source file is `index.markdown`, written in
 [markdown](http://daringfireball.net/projects/markdown/).
@@ -146,8 +148,9 @@ That's because this page has the *name* macro defined to `Home`.
 """ % MACRO_SOURCE,
 
 "about.html": """
-<!-- name: About -->
-<!-- menu_pos: 5 -->
+name: About
+menu_pos: 5
+--- EOM ---
 <p>
 This page's source file is <tt>about.html</tt>, written in <b>HTML</b>.
 </p>
@@ -158,8 +161,9 @@ Did you read the <a href="barfoo.html">foobar</a>?
 """ % MACRO_SOURCE,
                   
 "barfoo.textile" : """
-# name: Foobar
-# foobaz: boo
+name: Foobar
+foobaz: boo
+--- EOM ---
 This page's soure file is @barfoo.textile@, written in "textile":http://textile.thresholdstate.com/.
 
 It does not show up in the menu, because it has no *menu_pos* macro defined.
@@ -307,10 +311,8 @@ class MacroDict(dict):
 class Page(object):
     """Abstraction of a page."""
     
-    _re_macro_defs = (
-        re.compile(r'^# *(\w+) *[:=] *(.*)$'),
-        re.compile(r'^ *<!-- *(\w+) *[:=] *(.*)-->$'),
-    )
+    _re_eom = r'^-+ *EOM *-+ *\n?$'
+    _sec_macros = "macros"
     
     def __init__(self, path, strip, site_macros, enc_in):
         """Create a new page.
@@ -332,15 +334,25 @@ class Page(object):
             self.raw = fp.readlines()
         
         # split raw content into macro definitions and real content
+        macro_defs = ""
         content = ""
         for line in self.raw:
-            for re_md in self._re_macro_defs:
-                m = re_md.match(line)
-                if m:
-                    self.macros[m.group(1)] = m.group(2).strip()
-                    break
+            if not macro_defs and re.match(self._re_eom, line):
+                macro_defs = content
+                content = ""
             else:
                 content += line
+
+        # evaluate macro definitions
+        with os.tmpfile() as tf:
+            tf.write("[%s]\n" % self._sec_macros)
+            tf.write(macro_defs)
+            tf.flush()
+            tf.seek(0)
+            cp = SafeConfigParser()
+            cp.readfp(tf)
+        for key in cp.options(self._sec_macros):
+            self.macros[key] = cp.get(self._sec_macros, key)
         
         # page name (fall back to file name if macro 'name' is not set)
         if not MACRO_NAME in self.macros:
