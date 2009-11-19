@@ -133,13 +133,13 @@ PAGE_HTML = """<html>
 EXAMPLE_PAGES =  {
 "index.markdown" : """
 name: Home
-menu_pos: 0
+menu-pos: 0
 --- EOM ---
 
 This page's source file is `index.markdown`, written in
 [markdown](http://daringfireball.net/projects/markdown/).
 
-The navigation menu above links to all pages having the *menu_pos* macro defined. 
+The navigation menu above links to all pages having the *menu-pos* macro defined. 
 
 This page's file name is `index` but the name shown above is **Home**.
 That's because this page has the *name* macro defined to `Home`.
@@ -149,7 +149,7 @@ That's because this page has the *name* macro defined to `Home`.
 
 "about.html": """
 name: About
-menu_pos: 5
+menu-pos: 5
 --- EOM ---
 <p>
 This page's source file is <tt>about.html</tt>, written in <b>HTML</b>.
@@ -166,7 +166,7 @@ foobaz: boo
 --- EOM ---
 This page's soure file is @barfoo.textile@, written in "textile":http://textile.thresholdstate.com/.
 
-It does not show up in the menu, because it has no *menu_pos* macro defined.
+It does not show up in the menu, because it has no *menu-pos* macro defined.
 
 But it has defined a *foobaz* macro and it says {{ foobaz }}. Yes, it really says {{ foobaz }}.
 
@@ -287,15 +287,15 @@ class MacroDict(dict):
     def _builtin_menu(self, tag="span", current="current"):
         """Compile an HTML list of pages to appear as a navigation menu.
         
-        Any page which has a macro `menu_pos` defined is included. Menu
-        positions are sorted by the integer values of `menu_pos` (smallest
+        Any page which has a macro `menu-pos` defined is included. Menu
+        positions are sorted by the integer values of `menu-pos` (smallest
         first).
         
-        The current page's `li` element is assigned the CSS class `active`.
+        The current page's tag element is assigned the CSS class `active`.
         
         """
-        menu_pages = [p for p in self.pages if "menu_pos" in p.macros]
-        menu_pages.sort(key=lambda p: int(p.macros["menu_pos"]))
+        menu_pages = [p for p in self.pages if "menu-pos" in p.macros]
+        menu_pages.sort(key=lambda p: int(p.macros["menu-pos"]))
         
         html = ''
         for p in menu_pages:
