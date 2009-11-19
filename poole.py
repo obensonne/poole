@@ -284,13 +284,15 @@ class MacroDict(dict):
     #--------------------------------------------------------------------------
 
     def _builtin_menu(self, tag="span", current="current"):
-        """Compile an HTML list of pages to appear as a navigation menu.
+        """Expands to HTML code for a navigation menu.
         
-        Any page which has a macro `menu-pos` defined is included. Menu
-        positions are sorted by the integer values of `menu-pos` (smallest
-        first).
+        The name of any page which has a macro `menu-pos` defined is included
+        in the menu. Menu positions are sorted by the integer values of
+        `menu-pos` (smallest first).
         
-        The current page's tag element is assigned the CSS class `active`.
+        Each menu entry is surrounded by the HTML tag given by the keyword
+        `tag`. The current page's tag element is assigned the CSS class
+        given by keyword `current`.
         
         """
         menu_pages = [p for p in self.pages if "menu-pos" in p.macros]
