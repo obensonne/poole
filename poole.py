@@ -295,7 +295,7 @@ class MacroDict(dict):
         
         html = ''
         for p in menu_pages:
-            style = p == self.__page and (' class="%s"' % current) or ''
+            style = p.name == self.__page.name and (' class="%s"' % current) or ''
             html += '<%s%s><a href="%s">%s</a></%s>' % (tag, style, p.url,
                                                         p.name, tag)
         return html
