@@ -25,6 +25,7 @@
 from __future__ import with_statement
 
 import codecs
+from ConfigParser import SafeConfigParser
 import glob
 import inspect
 import optparse
@@ -44,7 +45,7 @@ from BaseHTTPServer import HTTPServer
 # constants
 #------------------------------------------------------------------------------
 
-RE_VAR = r'{{ *%s *}}'
+RE_MACRO = r'{{ *%s *}}'
 
 MACRO_NAME = "name"
 MACRO_SOURCE = "source"
@@ -131,13 +132,14 @@ PAGE_HTML = """<html>
 
 EXAMPLE_PAGES =  {
 "index.markdown" : """
-# name: Home
-# menu_pos: 0
+name: Home
+menu-pos: 0
+--- EOM ---
 
 This page's source file is `index.markdown`, written in
 [markdown](http://daringfireball.net/projects/markdown/).
 
-The navigation menu above links to all pages having the *menu_pos* macro defined. 
+The navigation menu above links to all pages having the *menu-pos* macro defined. 
 
 This page's file name is `index` but the name shown above is **Home**.
 That's because this page has the *name* macro defined to `Home`.
@@ -146,8 +148,9 @@ That's because this page has the *name* macro defined to `Home`.
 """ % MACRO_SOURCE,
 
 "about.html": """
-<!-- name: About -->
-<!-- menu_pos: 5 -->
+name: About
+menu-pos: 5
+--- EOM ---
 <p>
 This page's source file is <tt>about.html</tt>, written in <b>HTML</b>.
 </p>
@@ -158,11 +161,12 @@ Did you read the <a href="barfoo.html">foobar</a>?
 """ % MACRO_SOURCE,
                   
 "barfoo.textile" : """
-# name: Foobar
-# foobaz: boo
+name: Foobar
+foobaz: boo
+--- EOM ---
 This page's soure file is @barfoo.textile@, written in "textile":http://textile.thresholdstate.com/.
 
-It does not show up in the menu, because it has no *menu_pos* macro defined.
+It does not show up in the menu, because it has no *menu-pos* macro defined.
 
 But it has defined a *foobaz* macro and it says {{ foobaz }}. Yes, it really says {{ foobaz }}.
 
@@ -229,7 +233,6 @@ class MacroDict(dict):
     If all of these fail, a warning string is returned.
     
     """
-    
     pages = None
     
     def __init__(self, macros, page):
@@ -283,15 +286,15 @@ class MacroDict(dict):
     def _builtin_menu(self, tag="span", current="current"):
         """Compile an HTML list of pages to appear as a navigation menu.
         
-        Any page which has a macro `menu_pos` defined is included. Menu
-        positions are sorted by the integer values of `menu_pos` (smallest
+        Any page which has a macro `menu-pos` defined is included. Menu
+        positions are sorted by the integer values of `menu-pos` (smallest
         first).
         
-        The current page's `li` element is assigned the CSS class `active`.
+        The current page's tag element is assigned the CSS class `active`.
         
         """
-        menu_pages = [p for p in self.pages if "menu_pos" in p.macros]
-        menu_pages.sort(key=lambda p: int(p.macros["menu_pos"]))
+        menu_pages = [p for p in self.pages if "menu-pos" in p.macros]
+        menu_pages.sort(key=lambda p: int(p.macros["menu-pos"]))
         
         html = ''
         for p in menu_pages:
@@ -307,10 +310,8 @@ class MacroDict(dict):
 class Page(object):
     """Abstraction of a page."""
     
-    _re_macro_defs = (
-        re.compile(r'^# *(\w+) *[:=] *(.*)$'),
-        re.compile(r'^ *<!-- *(\w+) *[:=] *(.*)-->$'),
-    )
+    _re_eom = r'^-+ *EOM *-+ *\n?$'
+    _sec_macros = "macros"
     
     def __init__(self, path, strip, site_macros, enc_in):
         """Create a new page.
@@ -319,8 +320,8 @@ class Page(object):
         @param strip: portion of path to strip from `path` for deployment
         @param site_macros: site macros
         @param enc_in: encoding of page input file
-        """
         
+        """
         base, ext = os.path.splitext(path)
         base = base[len(strip):].lstrip(os.path.sep)
         self.url = "%s.html" % base.replace(os.path.sep, "/")
@@ -332,15 +333,25 @@ class Page(object):
             self.raw = fp.readlines()
         
         # split raw content into macro definitions and real content
+        macro_defs = ""
         content = ""
         for line in self.raw:
-            for re_md in self._re_macro_defs:
-                m = re_md.match(line)
-                if m:
-                    self.macros[m.group(1)] = m.group(2).strip()
-                    break
+            if not macro_defs and re.match(self._re_eom, line):
+                macro_defs = content
+                content = ""
             else:
                 content += line
+
+        # evaluate macro definitions
+        with os.tmpfile() as tf:
+            tf.write("[%s]\n" % self._sec_macros)
+            tf.write(macro_defs)
+            tf.flush()
+            tf.seek(0)
+            cp = SafeConfigParser()
+            cp.readfp(tf)
+        for key in cp.options(self._sec_macros):
+            self.macros[key] = cp.get(self._sec_macros, key)
         
         # page name (fall back to file name if macro 'name' is not set)
         if not MACRO_NAME in self.macros:
@@ -420,15 +431,15 @@ def build(project, base_url, enc_in, enc_out):
     for page in pages:
         
         # expand reserved macros
-        html = re.sub(RE_VAR % MACRO_CONTENT, page.content, skeleton)
-        html = re.sub(RE_VAR % MACRO_ENCODING, enc_out, html)
+        html = re.sub(RE_MACRO % MACRO_CONTENT, page.content, skeleton)
+        html = re.sub(RE_MACRO % MACRO_ENCODING, enc_out, html)
         
         # expand other macros
-        macros_used = re.findall(RE_VAR % "([^}]+)", html)
+        macros_used = re.findall(RE_MACRO % "([^}]+)", html)
         for macro in macros_used:
             macro = macro.strip()
             if macro in (MACRO_SOURCE,): continue
-            html = re.sub(RE_VAR % macro, page.macros[macro], html)
+            html = re.sub(RE_MACRO % macro, page.macros[macro], html)
         
         # make relative links absolute
         links = re.findall(r'(?:src|href)="([^#/][^"]*)"', html)
@@ -438,7 +449,7 @@ def build(project, base_url, enc_in, enc_out):
             html = html.replace('src="%s"' % link, 'src="%s"' % based)
         
         raw = SOURCE % xcape(''.join(page.raw).strip('\n'))
-        html = re.sub(RE_VAR % MACRO_SOURCE, raw, html)
+        html = re.sub(RE_MACRO % MACRO_SOURCE, raw, html)
         
         # write HTML page
         with codecs.open(opj(dir_out, page.path), 'w', enc_out) as fp:
