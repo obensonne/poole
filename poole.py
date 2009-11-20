@@ -432,6 +432,8 @@ def build(project, base_url, enc_in, enc_out):
     
     for page in pages:
         
+        print("info: processing page %s" % page.path)
+        
         # expand reserved macros
         html = re.sub(RE_MACRO % MACRO_CONTENT, page.content, skeleton)
         html = re.sub(RE_MACRO % MACRO_ENCODING, enc_out, html)
