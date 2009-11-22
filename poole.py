@@ -188,10 +188,7 @@ Either install this module or use another markup language for your pages.
 {{ source }}
 """
 
-try:
-    import markdown
-except ImportError:
-    markdown = None
+import markdown
 
 #------------------------------------------------------------------------------
 # macro dictionary
@@ -209,7 +206,7 @@ class MacroDict(dict):
     
     """
     pages = None
-    site_macros = None
+    module = None
     
     def __init__(self, page):
         """New macro dictionary."""
@@ -231,7 +228,7 @@ class MacroDict(dict):
                 value = [v.strip() for v in value.split(",")]
             kwargs[str(key)] = value
         
-        macro = getattr(self.site_macros, name, None)
+        macro = getattr(self.module, name, None)
 
         # function macro in macro module
         if inspect.isfunction(macro):
@@ -282,7 +279,7 @@ class MacroDict(dict):
 #------------------------------------------------------------------------------
 
 class Page(object):
-    """Abstraction of a page."""
+    """Abstraction of a source page."""
     
     _re_eom = r'^-+ *EOM *-+ *\n?$'
     _sec_macros = "macros"
@@ -295,7 +292,7 @@ class Page(object):
         @param enc_in: encoding of page input file
         
         """
-        base, ext = os.path.splitext(path)
+        base = os.path.splitext(path)[0]
         base = base[len(strip):].lstrip(os.path.sep)
         self.url = "%s.html" % base.replace(os.path.sep, "/")
         self.path = "%s.html" % base
@@ -382,15 +379,14 @@ def build(project, base_url, enc_in, enc_out):
     if not os.path.exists(dir_out):
         os.mkdir(dir_out)
     
-    # import site macros
+    # import site macros module
     sys.path.insert(0, project)
     try:
-        import macros
+        import macros as site_macros_module
     except ImportError:
-        class macros: pass
-    finally:
-        del(sys.path[0])
-    MacroDict.site_macros = macros
+        site_macros_module = None
+    del(sys.path[0])
+    MacroDict.module = site_macros_module
         
     # read and render pages
     pages = []
