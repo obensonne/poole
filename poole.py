@@ -44,13 +44,9 @@ from BaseHTTPServer import HTTPServer
 # constants
 #------------------------------------------------------------------------------
 
-RE_MACRO = r'{{ *%s *}}'
-
 MACRO_NAME = "name"
 MACRO_CONTENT = "__content__"
 MACRO_ENCODING = "__encoding__"
-
-RE_FILES_IGNORE = r'(^\.)|(~$)'
 
 #------------------------------------------------------------------------------
 # example content for a new project
@@ -59,7 +55,7 @@ RE_FILES_IGNORE = r'(^\.)|(~$)'
 PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
+    <meta http-equiv="Content-Type" content="text/html; charset={{ %s }}" />
     <title>a poole site</title>
     <style type="text/css" id="internalStyle">
       body {
@@ -115,7 +111,7 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
     <div id="menu">
         {{ menu }}
     </div>
-    <div id="content">{{ __content__ }}</div>
+    <div id="content">{{ %s }}</div>
     </div>
     <div id="footer">
         Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>.
@@ -123,11 +119,11 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
     </div>
 </body>
 </html>
-"""
+""" % (MACRO_ENCODING, MACRO_CONTENT)
 
 EXAMPLE_PAGES =  {
 "index.md" : """
-name: Home
+%s: Home
 menu-pos: 0
 --- EOM ---
 
@@ -145,20 +141,20 @@ The navigation menu above links to all pages having the *menu-pos* macro defined
 
 This page's file name is `index` but the name shown above is **Home**.
 That's because this page has the *name* macro defined to `Home`.
-""",
+""" % MACRO_NAME,
 
 "about.md": """
-name: About
+%s: About
 menu-pos: 5
 --- EOM ---
 
 This page's source file is <tt>about.md</tt>.
 
 Did you read the [foobar](barfoo.html)?
-""",
+""" % MACRO_NAME,
                   
 "barfoo.md" : """
-name: Foobar
+%s: Foobar
 foobaz: boo
 --- EOM ---
 This page's soure file is *barfoo.md*.
@@ -176,7 +172,7 @@ says {{ foobaz }}.
 ### Layout
 
 You can adjust the site layout in the file *page.html*.
-"""
+""" % MACRO_NAME
 }
 
 #------------------------------------------------------------------------------
@@ -337,30 +333,40 @@ class Page(object):
         self.name = self.macros[MACRO_NAME]
         
 #------------------------------------------------------------------------------
-# helper
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
-# commands
+# build site
 #------------------------------------------------------------------------------
 
 def build(project, base_url, enc_in, enc_out):
     """Build a site project."""
     
-    def expand_macros(source, md):
-        """Expand macros in given source using given macro dictionary."""
+    RE_MACRO_FIND = r'(?:^|[^\\]){{ *([^}]+) *}}' # any macro
+    RE_MACRO_SUB_PATT = r'(^|[^\\]){{ *%s *}}' # specific macro
+    RE_MACRO_SUB_REPL = r'\1%s'
+    RE_MACRO_X_PATT = r'\\({{ *[^}]+ *}})' # any escaped macro
+    RE_MACRO_X_REPL = r'\1'
+    RE_FILES_IGNORE = r'(^\.)|(~$)' # files to not copy to output
+    
+    def expand_macro(macro, value, source):
+        """Expand macro in source to value."""
+        patt = RE_MACRO_SUB_PATT % macro
+        repl = RE_MACRO_SUB_REPL % value
+        return re.sub(patt, repl, source)
+    
+    def expand_all_macros(source, md):
+        """Expand all macros in source using given macro dictionary."""
         
-        macros = re.findall(RE_MACRO % "([^}]+)", source)
+        macros = re.findall(RE_MACRO_FIND, source)
         expanded = source
         for macro in macros:
             macro = macro.strip()
-            expanded = re.sub(RE_MACRO % macro, md[macro], expanded)
+            expanded = expand_macro(macro, md[macro], expanded)
         return expanded
 
     dir_in = opj(project, "input")
     dir_out = opj(project, "output")
     page_html = opj(project, "page.html")
 
+    # check required files and folders
     for pelem in (page_html, dir_in, dir_out):
         if not os.path.exists(pelem):
             print("error: %s does not exist, looks like project has not been "
@@ -414,18 +420,21 @@ def build(project, base_url, enc_in, enc_out):
         print("info: processing page %s" % page.path)
         
         # expand macros, phase 1 (macros used in page source)
-        out = expand_macros(page.source, page.macros)
+        out = expand_all_macros(page.source, page.macros)
         
         # convert to HTML
         out = markdown.Markdown().convert(out)
         
         # expand reserved macros
-        out = re.sub(RE_MACRO % MACRO_CONTENT, out, skeleton)
-        out = re.sub(RE_MACRO % MACRO_ENCODING, enc_out, out)
+        out = expand_macro(MACRO_CONTENT, out, skeleton)
+        out = expand_macro(MACRO_ENCODING, enc_out, out)
         
         # expand macros, phase 2 (macros used in page.html)
-        out = expand_macros(out, page.macros)
+        out = expand_all_macros(out, page.macros)
         
+        # un-escape escaped macros
+        out = re.sub(RE_MACRO_X_PATT, RE_MACRO_X_REPL, out)
+
         # make relative links absolute
         links = re.findall(r'(?:src|href)="([^#/][^"]*)"', out)
         for link in links:
@@ -438,6 +447,10 @@ def build(project, base_url, enc_in, enc_out):
             fp.write(out)
 
     print("success: built project")
+
+#------------------------------------------------------------------------------
+# init site
+#------------------------------------------------------------------------------
 
 def init(project):
     """Initialize a site project."""
@@ -460,6 +473,10 @@ def init(project):
         fp.write(PAGE_HTML)
     
     print("success: initialized project")
+
+#------------------------------------------------------------------------------
+# serve site
+#------------------------------------------------------------------------------
 
 def serve(project, port):
     """Temporary serve a site project."""
