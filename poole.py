@@ -33,7 +33,6 @@ import os
 import os.path
 from os.path import join as opj
 import re
-from xml.sax.saxutils import escape as xcape
 import shutil
 import sys
 import urlparse
@@ -94,6 +93,9 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
           text-align: center;
           font-size: small;
       }
+      div#footer a {
+          color: gray;
+      }
       pre {
           border: dotted black 1px;
           background: #eeeeec;
@@ -114,9 +116,8 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
     <div id="content">{{ __content__ }}</div>
     </div>
     <div id="footer">
-        Content licensed under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC-by-SA</a>.
-        <br />
-        Powered by <a href="http://bitbucket.org/obensonne/poole">Poole</a>
+        Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>.
+        Licensed as <a href="http://creativecommons.org/licenses/by-sa/3.0">CC-by-SA</a>.
     </div>
 </body>
 </html>
