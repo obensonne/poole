@@ -50,6 +50,8 @@ MACRO_NAME = "name"
 MACRO_CONTENT = "__content__"
 MACRO_ENCODING = "__encoding__"
 
+RE_FILES_IGNORE = r'(^\.)|(~$)'
+
 #------------------------------------------------------------------------------
 # example content for a new project
 #------------------------------------------------------------------------------
@@ -389,8 +391,10 @@ def build(project, base_url, enc_in, enc_out):
     for cwd, dirs, files in os.walk(dir_in):
         cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
         for sdir in dirs:
+            if re.search(RE_FILES_IGNORE, sdir): continue
             os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
+            if re.search(RE_FILES_IGNORE, f): continue
             if os.path.splitext(f)[1] in (".md", ".markdown"):
                 page = Page(opj(cwd, f), dir_in, enc_in)
                 page.macros["base_url"] = base_url
