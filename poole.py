@@ -48,21 +48,12 @@ from BaseHTTPServer import HTTPServer
 RE_MACRO = r'{{ *%s *}}'
 
 MACRO_NAME = "name"
-MACRO_SOURCE = "source"
 MACRO_CONTENT = "__content__"
 MACRO_ENCODING = "__encoding__"
 
 #------------------------------------------------------------------------------
 # example content for a new project
 #------------------------------------------------------------------------------
-
-SOURCE = """
-<!-- source of the original page file -->
-<hr style="margin-top: 1em;" />
-<span style="font-size: small;">Source of this page:</span>
-<pre>%s</pre>
-<!-- end: source of the original page file -->
-"""
 
 PAGE_HTML = """<html>
 <head>
@@ -131,49 +122,57 @@ PAGE_HTML = """<html>
 """
 
 EXAMPLE_PAGES =  {
-"index.markdown" : """
+"index.md" : """
 name: Home
 menu-pos: 0
 --- EOM ---
 
-This page's source file is `index.markdown`, written in
-[markdown](http://daringfireball.net/projects/markdown/).
+## Welcome to Poole
+
+This page's source file is `index.md`. It is written in
+[markdown](http://daringfireball.net/projects/markdown/). It's easier to write
+markdown than HTML.
+
+## Navigation menu
 
 The navigation menu above links to all pages having the *menu-pos* macro defined. 
 
+## Page names
+
 This page's file name is `index` but the name shown above is **Home**.
 That's because this page has the *name* macro defined to `Home`.
+""",
 
-{{ %s }}
-""" % MACRO_SOURCE,
-
-"about.html": """
+"about.md": """
 name: About
 menu-pos: 5
 --- EOM ---
-<p>
-This page's source file is <tt>about.html</tt>, written in <b>HTML</b>.
-</p>
-<p>
-Did you read the <a href="barfoo.html">foobar</a>?
-</p>
-{{ %s }}
-""" % MACRO_SOURCE,
+
+This page's source file is <tt>about.md</tt>.
+
+Did you read the [foobar](barfoo.html)?
+""",
                   
-"barfoo.textile" : """
+"barfoo.md" : """
 name: Foobar
 foobaz: boo
 --- EOM ---
-This page's soure file is @barfoo.textile@, written in "textile":http://textile.thresholdstate.com/.
+This page's soure file is *barfoo.md*.
 
-It does not show up in the menu, because it has no *menu-pos* macro defined.
+### Navigation menu
 
-But it has defined a *foobaz* macro and it says {{ foobaz }}. Yes, it really says {{ foobaz }}.
+This page does not show up in the menu, because it has not defined the
+*menu-pos* macro.
 
-You can adjust the site layout in the file @page.html@.
+### Macros
 
-{{ %s }}
-""" % MACRO_SOURCE
+But it has defined a *foobaz* macro and it says {{ foobaz }}. Yes, it really
+says {{ foobaz }}.
+
+### Layout
+
+You can adjust the site layout in the file *page.html*.
+"""
 }
 
 #------------------------------------------------------------------------------
@@ -193,30 +192,6 @@ try:
     import markdown
 except ImportError:
     markdown = None
-try:
-    import textile
-except ImportError:
-    textile = None
-
-PAGE_FILE_EXTS = (".md", ".markdown", ".textile", ".html")
-
-def convert(content, markup):
-    """Convert content of given type into HTML."""
-    
-    markup = markup.strip(".")
-    
-    if markup in ("md", "markdown"):
-        if markdown:
-            return markdown.Markdown().convert(content)
-        else:
-            return MISSING_MODULE % ("markdown")
-    if markup in ("textile",):
-        if textile:
-            return unicode(textile.textile(content.encode("utf8")))
-        else:
-            return MISSING_MODULE % ("textile")
-
-    return content
 
 #------------------------------------------------------------------------------
 # macro dictionary
@@ -336,13 +311,13 @@ class Page(object):
         
         # split raw content into macro definitions and real content
         macro_defs = ""
-        content = ""
+        self.source = ""
         for line in self.raw:
             if not macro_defs and re.match(self._re_eom, line):
-                macro_defs = content
-                content = ""
+                macro_defs = self.source
+                self.source = "" # only macro defs until here, reset source
             else:
-                content += line
+                self.source += line
 
         # evaluate macro definitions
         with os.tmpfile() as tf:
@@ -360,9 +335,6 @@ class Page(object):
             self.macros[MACRO_NAME] = os.path.basename(base)
             print("warning: no 'name' macro for %s, using filename" % self.path)
         self.name = self.macros[MACRO_NAME]
-        
-        # convert to HTML
-        self.content = convert(content, ext)
         
 #------------------------------------------------------------------------------
 # helper
@@ -387,6 +359,16 @@ def site_macros(project):
 def build(project, base_url, enc_in, enc_out):
     """Build a site project."""
     
+    def expand_macros(source, md):
+        """Expand macros in given source using given macro dictionary."""
+        
+        macros = re.findall(RE_MACRO % "([^}]+)", source)
+        expanded = source
+        for macro in macros:
+            macro = macro.strip()
+            expanded = re.sub(RE_MACRO % macro, md[macro], expanded)
+        return expanded
+
     dir_in = opj(project, "input")
     dir_out = opj(project, "output")
     page_html = opj(project, "page.html")
@@ -416,7 +398,7 @@ def build(project, base_url, enc_in, enc_out):
         for sdir in dirs:
             os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
-            if os.path.splitext(f)[1] in PAGE_FILE_EXTS:
+            if os.path.splitext(f)[1] in (".md", ".markdown"):
                 page = Page(opj(cwd, f), dir_in, macros, enc_in)
                 page.macros["base_url"] = base_url
                 pages.append(page)
@@ -434,30 +416,29 @@ def build(project, base_url, enc_in, enc_out):
         
         print("info: processing page %s" % page.path)
         
-        # expand reserved macros
-        html = re.sub(RE_MACRO % MACRO_CONTENT, page.content, skeleton)
-        html = re.sub(RE_MACRO % MACRO_ENCODING, enc_out, html)
+        # expand macros, phase 1 (macros used in page source)
+        out = expand_macros(page.source, page.macros)
         
-        # expand other macros
-        macros_used = re.findall(RE_MACRO % "([^}]+)", html)
-        for macro in macros_used:
-            macro = macro.strip()
-            if macro in (MACRO_SOURCE,): continue
-            html = re.sub(RE_MACRO % macro, page.macros[macro], html)
+        # convert to HTML
+        out = markdown.Markdown().convert(out)
+        
+        # expand reserved macros
+        out = re.sub(RE_MACRO % MACRO_CONTENT, out, skeleton)
+        out = re.sub(RE_MACRO % MACRO_ENCODING, enc_out, out)
+        
+        # expand macros, phase 2 (macros used in page.html)
+        out = expand_macros(out, page.macros)
         
         # make relative links absolute
-        links = re.findall(r'(?:src|href)="([^#/][^"]*)"', html)
+        links = re.findall(r'(?:src|href)="([^#/][^"]*)"', out)
         for link in links:
             based = urlparse.urljoin(base_url, link)
-            html = html.replace('href="%s"' % link, 'href="%s"' % based)
-            html = html.replace('src="%s"' % link, 'src="%s"' % based)
-        
-        raw = SOURCE % xcape(''.join(page.raw).strip('\n'))
-        html = re.sub(RE_MACRO % MACRO_SOURCE, raw, html)
+            out = out.replace('href="%s"' % link, 'href="%s"' % based)
+            out = out.replace('src="%s"' % link, 'src="%s"' % based)
         
         # write HTML page
         with codecs.open(opj(dir_out, page.path), 'w', enc_out) as fp:
-            fp.write(html)
+            fp.write(out)
 
     print("success: built project")
 
