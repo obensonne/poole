@@ -207,19 +207,16 @@ class MacroDict(dict):
       * function or variable in macro module (site-global macro)
       * function in MacroDict (built-in macro)
 
-    If all of these fail, a warning string is returned.
+    If all fail, an empty string is returned and a warning is printed.
     
     """
     pages = None
+    site_macros = None
     
-    def __init__(self, macros, page):
-        """Create new macro dictionary.
+    def __init__(self, page):
+        """New macro dictionary."""
         
-        Page macros have higher priority than site macros set in `macros`.
-        
-        """
         super(MacroDict, self).__init__()
-        self.__macros = macros
         self.__page = page
         
     def __getitem__(self, key):
@@ -236,7 +233,7 @@ class MacroDict(dict):
                 value = [v.strip() for v in value.split(",")]
             kwargs[str(key)] = value
         
-        macro = getattr(self.__macros, name, None)
+        macro = getattr(self.site_macros, name, None)
 
         # function macro in macro module
         if inspect.isfunction(macro):
@@ -292,12 +289,11 @@ class Page(object):
     _re_eom = r'^-+ *EOM *-+ *\n?$'
     _sec_macros = "macros"
     
-    def __init__(self, path, strip, site_macros, enc_in):
+    def __init__(self, path, strip, enc_in):
         """Create a new page.
         
         @param path: full path to page input file
         @param strip: portion of path to strip from `path` for deployment
-        @param site_macros: site macros
         @param enc_in: encoding of page input file
         
         """
@@ -306,7 +302,7 @@ class Page(object):
         self.url = "%s.html" % base.replace(os.path.sep, "/")
         self.path = "%s.html" % base
         
-        self.macros = MacroDict(site_macros, self)
+        self.macros = MacroDict(self)
         
         with codecs.open(path, 'r', enc_in) as fp:
             self.raw = fp.readlines()
@@ -341,18 +337,6 @@ class Page(object):
 #------------------------------------------------------------------------------
 # helper
 #------------------------------------------------------------------------------
-
-def site_macros(project):
-    """Get site macros module or a dummy if undefined."""
-    
-    sys.path.insert(0, project)
-    try:
-        import macros
-    except ImportError:
-        class macros: pass
-    finally:
-        del(sys.path[0])
-    return macros    
 
 #------------------------------------------------------------------------------
 # commands
@@ -390,8 +374,15 @@ def build(project, base_url, enc_in, enc_out):
     if not os.path.exists(dir_out):
         os.mkdir(dir_out)
     
-    # site macros
-    macros = site_macros(project)
+    # import site macros
+    sys.path.insert(0, project)
+    try:
+        import macros
+    except ImportError:
+        class macros: pass
+    finally:
+        del(sys.path[0])
+    MacroDict.site_macros = macros
         
     # read and render pages
     pages = []
@@ -401,7 +392,7 @@ def build(project, base_url, enc_in, enc_out):
             os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
             if os.path.splitext(f)[1] in (".md", ".markdown"):
-                page = Page(opj(cwd, f), dir_in, macros, enc_in)
+                page = Page(opj(cwd, f), dir_in, enc_in)
                 page.macros["base_url"] = base_url
                 pages.append(page)
             else:
