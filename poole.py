@@ -55,7 +55,8 @@ MACRO_ENCODING = "__encoding__"
 # example content for a new project
 #------------------------------------------------------------------------------
 
-PAGE_HTML = """<html>
+PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
     <title>a poole site</title>
@@ -85,7 +86,7 @@ PAGE_HTML = """<html>
           background-color: #555753;
       }
       #menu a {
-          color: fefefc;
+          color: #fefefc;
           text-decoration: none;
       }
       div#footer {
