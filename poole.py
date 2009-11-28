@@ -397,7 +397,7 @@ def build(project, base_url, enc_in, enc_out):
             os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
             if re.search(RE_FILES_IGNORE, f): continue
-            if os.path.splitext(f)[1] in (".md", ".markdown"):
+            if os.path.splitext(f)[1] in (".md", ".markdown", "mdown"):
                 page = Page(opj(cwd, f), dir_in, enc_in)
                 page.macros["base_url"] = base_url
                 pages.append(page)
