@@ -519,7 +519,7 @@ def get_options():
     
     og = optparse.OptionGroup(op, "Serve options")
     og.add_option("" , "--port", default=8080,
-                  metavar="PORT",
+                  metavar="PORT", type="int",
                   help="port for serving (default: 8080)")
     op.add_option_group(og)
     
