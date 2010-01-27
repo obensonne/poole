@@ -339,9 +339,9 @@ def build(project, base_url, enc_in, enc_out):
     
     RE_MACRO_FIND = r'(?:^|[^\\]){{ *([^}]+) *}}' # any macro
     RE_MACRO_SUB_PATT = r'(^|[^\\]){{ *%s *}}' # specific macro
-    RE_MACRO_SUB_REPL = r'\1%s'
+    RE_MACRO_SUB_REPL = r'\g<1>%s'
     RE_MACRO_X_PATT = r'\\({{ *[^}]+ *}})' # any escaped macro
-    RE_MACRO_X_REPL = r'\1'
+    RE_MACRO_X_REPL = r'\g<1>'
     RE_FILES_IGNORE = r'(^\.)|(~$)' # files to not copy to output
     
     def expand_macro(macro, value, source):
