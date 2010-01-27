@@ -313,13 +313,14 @@ class Page(object):
                 self.source += line
 
         # evaluate macro definitions
-        with os.tmpfile() as tf:
+        tfname = ".page-macros.tmp"
+        with codecs.open(tfname, "w", enc_in) as tf:
             tf.write("[%s]\n" % self._sec_macros)
             tf.write(macro_defs)
-            tf.flush()
-            tf.seek(0)
+        with codecs.open(tfname, "r", enc_in) as tf:
             cp = SafeConfigParser()
             cp.readfp(tf)
+        os.remove(tfname)
         for key in cp.options(self._sec_macros):
             self.macros[key] = cp.get(self._sec_macros, key)
         
