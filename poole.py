@@ -191,6 +191,36 @@ Either install this module or use another markup language for your pages.
 
 import markdown
 
+#--------------------------------------------------------------------------
+# built-in macros
+#--------------------------------------------------------------------------
+
+def _bim_menu(pages, page, tag="span", current="current"):
+    """Expands to HTML code for a navigation menu.
+    
+    The name of any page which has a macro `menu-posistion` defined is
+    included in the menu. Menu positions are sorted by the integer values
+    of `menu-position` (smallest first).
+    
+    Each menu entry is surrounded by the HTML tag given by the keyword
+    `tag`. The current page's tag element is assigned the CSS class
+    given by keyword `current`.
+    
+    """
+    mpages = [p for p in pages if MACRO_MENU in p.macros]
+    mpages.sort(key=lambda p: int(p.macros[MACRO_MENU]))
+    
+    html = ''
+    for p in mpages:
+        style = p.title == page.title and (' class="%s"' % current) or ''
+        html += '<%s%s><a href="%s">%s</a></%s>' % (tag, style, p.url,
+                                                    p.title, tag)
+    return html
+
+BIMS = {
+    "menu": _bim_menu,
+}
+
 #------------------------------------------------------------------------------
 # macro dictionary
 #------------------------------------------------------------------------------
@@ -242,42 +272,14 @@ class MacroDict(dict):
             return str(macro)
         
         # built-in macro
-        macro = getattr(self, "_builtin_%s" % name, None)
-        if macro:
-            return macro(**kwargs)
+        if name in BIMS:
+            return BIMS[name](self.pages, self.__page, **kwargs)
         
         # macro not defined -> warning
         print("warning: page %s uses undefined macro '%s'" %
               (self.__page.path, name))
         return ""
         
-    #--------------------------------------------------------------------------
-    # built-in macros
-    #--------------------------------------------------------------------------
-
-    def _builtin_menu(self, tag="span", current="current"):
-        """Expands to HTML code for a navigation menu.
-        
-        The name of any page which has a macro `menu-pos` defined is included
-        in the menu. Menu positions are sorted by the integer values of
-        `menu-pos` (smallest first).
-        
-        Each menu entry is surrounded by the HTML tag given by the keyword
-        `tag`. The current page's tag element is assigned the CSS class
-        given by keyword `current`.
-        
-        """
-        mpages = [p for p in self.pages if MACRO_MENU in p.macros]
-        mpages.sort(key=lambda p: int(p.macros[MACRO_MENU]))
-        
-        html = ''
-        for p in mpages:
-            is_current = p.title == self.__page.title
-            style = is_current and (' class="%s"' % current) or ''
-            html += '<%s%s><a href="%s">%s</a></%s>' % (tag, style, p.url,
-                                                        p.title, tag)
-        return html
-
 #------------------------------------------------------------------------------
 # page class
 #------------------------------------------------------------------------------
