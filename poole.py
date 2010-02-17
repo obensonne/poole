@@ -44,7 +44,8 @@ from BaseHTTPServer import HTTPServer
 # constants
 #------------------------------------------------------------------------------
 
-MACRO_NAME = "name"
+MACRO_TITLE = "title"
+MACRO_MENU = "menu-position"
 MACRO_CONTENT = "__content__"
 MACRO_ENCODING = "__encoding__"
 
@@ -56,7 +57,7 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset={{ %s }}" />
-    <title>a poole site</title>
+    <title>Poole - %s</title>
     <style type="text/css" id="internalStyle">
       body {
           font-family: sans;
@@ -106,7 +107,7 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{{ name }}</h2>
+         <h2>{{ %s }}</h2>
     </div>
     <div id="menu">
         {{ menu }}
@@ -119,13 +120,13 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
     </div>
 </body>
 </html>
-""" % (MACRO_ENCODING, MACRO_CONTENT)
+""" % (MACRO_ENCODING, MACRO_TITLE, MACRO_TITLE, MACRO_CONTENT)
 
 EXAMPLE_PAGES =  {
 "index.md" : """
 %s: Home
-menu-pos: 0
---- EOM ---
+%s: 0
+---
 
 ## Welcome to Poole
 
@@ -135,34 +136,34 @@ markdown than HTML.
 
 ## Navigation menu
 
-The navigation menu above links to all pages having the *menu-pos* macro defined. 
+The navigation menu above links to all pages having the *menu* macro defined.
 
 ## Page names
 
 This page's file name is `index` but the name shown above is **Home**.
-That's because this page has the *name* macro defined to `Home`.
-""" % MACRO_NAME,
+That's because this page has the *title* macro defined to `Home`.
+""" % (MACRO_TITLE, MACRO_MENU),
 
 "about.md": """
 %s: About
-menu-pos: 5
---- EOM ---
+%s: 5
+---
 
 This page's source file is <tt>about.md</tt>.
 
 Did you read the [foobar](barfoo.html)?
-""" % MACRO_NAME,
+""" % (MACRO_TITLE, MACRO_MENU),
                   
 "barfoo.md" : """
 %s: Foobar
 foobaz: boo
---- EOM ---
+---
 This page's soure file is *barfoo.md*.
 
 ### Navigation menu
 
 This page does not show up in the menu, because it has not defined the
-*menu-pos* macro.
+*menu* macro.
 
 ### Macros
 
@@ -172,7 +173,7 @@ says {{ foobaz }}.
 ### Layout
 
 You can adjust the site layout in the file *page.html*.
-""" % MACRO_NAME
+""" % MACRO_TITLE
 }
 
 #------------------------------------------------------------------------------
@@ -220,6 +221,8 @@ class MacroDict(dict):
         if key in self:
             return super(MacroDict, self).__getitem__(key)
         
+        key = key.replace("-", "_")
+        
         # split macro into name and arguments
         name = key.split(None, 1)[0]
         kwargs = {}
@@ -264,14 +267,15 @@ class MacroDict(dict):
         given by keyword `current`.
         
         """
-        menu_pages = [p for p in self.pages if "menu-pos" in p.macros]
-        menu_pages.sort(key=lambda p: int(p.macros["menu-pos"]))
+        mpages = [p for p in self.pages if MACRO_MENU in p.macros]
+        mpages.sort(key=lambda p: int(p.macros[MACRO_MENU]))
         
         html = ''
-        for p in menu_pages:
-            style = p.name == self.__page.name and (' class="%s"' % current) or ''
+        for p in mpages:
+            is_current = p.title == self.__page.title
+            style = is_current and (' class="%s"' % current) or ''
             html += '<%s%s><a href="%s">%s</a></%s>' % (tag, style, p.url,
-                                                        p.name, tag)
+                                                        p.title, tag)
         return html
 
 #------------------------------------------------------------------------------
@@ -281,7 +285,7 @@ class MacroDict(dict):
 class Page(object):
     """Abstraction of a source page."""
     
-    _re_eom = r'^-+ *EOM *-+ *\n?$'
+    _re_eom = r'^---+ *\n?$'
     _sec_macros = "macros"
     
     def __init__(self, path, strip, enc_in):
@@ -324,11 +328,10 @@ class Page(object):
         for key in cp.options(self._sec_macros):
             self.macros[key] = cp.get(self._sec_macros, key)
         
-        # page name (fall back to file name if macro 'name' is not set)
-        if not MACRO_NAME in self.macros:
-            self.macros[MACRO_NAME] = os.path.basename(base)
-            print("warning: no 'name' macro for %s, using filename" % self.path)
-        self.name = self.macros[MACRO_NAME]
+        # page title (fall back to file name if macro 'title' is not set)
+        if not MACRO_TITLE in self.macros:
+            self.macros[MACRO_TITLE] = os.path.basename(base)
+        self.title = self.macros[MACRO_TITLE]
         
 #------------------------------------------------------------------------------
 # build site
@@ -376,7 +379,7 @@ def build(project, base_url, enc_in, enc_out):
         if os.path.isdir(fod):
             shutil.rmtree(fod)
         else:
-            os.remove(fod)  
+            os.remove(fod)
     if not os.path.exists(dir_out):
         os.mkdir(dir_out)
     
