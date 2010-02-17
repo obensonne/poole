@@ -195,7 +195,7 @@ import markdown
 # built-in macros
 #--------------------------------------------------------------------------
 
-def _bim_menu(pages, page, tag="span", current="current"):
+def bim_menu(pages, page, tag="span", current="current"):
     """Expands to HTML code for a navigation menu.
     
     The name of any page which has a macro `menu-posistion` defined is
@@ -218,7 +218,7 @@ def _bim_menu(pages, page, tag="span", current="current"):
     return html
 
 BIMS = {
-    "menu": _bim_menu,
+    "menu": bim_menu,
 }
 
 #------------------------------------------------------------------------------
@@ -496,7 +496,7 @@ def serve(project, port):
 # options
 #------------------------------------------------------------------------------
 
-def get_options():
+def options():
     """Parse and validate command line arguments."""
     
     usage = ("Usage: %prog --init [path/to/project]\n"
@@ -545,7 +545,7 @@ def get_options():
 
 def main():
     
-    opts = get_options()
+    opts = options()
     
     if opts.init:
         init(opts.project)
