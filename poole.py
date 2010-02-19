@@ -220,15 +220,16 @@ post's title. The optional macro `summary` sets a summary of the post:
 {{ post-list }}
 """ % (MACRO_MENU),
 
-"post.2010-02-01.example_post.md" : """
-
+"post.2010-02-01.Doctors_in_my_penguin.md" : """
+summary: There is a bank in my eel, your argument is invalid.
+---
 {{ post-header }}
 
-THE MOVIE INDUSTRY? IN _MY_ MACBOOK?
+THE MOVIE INDUSTRY? IN *MY* MACBOOK?
 JESUS CHRIST IT'S A BABBY GET IN THE HERO!
 BLESS YOU, KEYBOARD CAT. BLEYBOARD CAT.
 DISREGARD THAT, I TROLL MONGS.
-WHAT _ARE_ EMOS? WE JUST DON'T KNOW.
+WHAT *ARE* EMOS? WE JUST DON'T KNOW.
 
 More nonsense at <http://meme.boxofjunk.ws>.
 
