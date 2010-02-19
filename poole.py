@@ -40,6 +40,8 @@ import urlparse
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 
+import markdown
+
 #------------------------------------------------------------------------------
 # constants
 #------------------------------------------------------------------------------
@@ -174,21 +176,6 @@ macro and it says {{ foobaz }}. Yes, it really says {{ foobaz }}.
 
 """
 }
-
-#------------------------------------------------------------------------------
-# content conversion
-#------------------------------------------------------------------------------
-
-MISSING_MODULE = """
-<p style="color: red; text-align: center">
-Missing Python module <strong>%s</strong>.
-<br/>
-Either install this module or use another markup language for your pages.
-</p>
-{{ source }}
-"""
-
-import markdown
 
 #--------------------------------------------------------------------------
 # built-in macros
