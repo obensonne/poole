@@ -96,6 +96,7 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
       }
       div#footer a {
           color: gray;
+          text-decoration: none;
       }
       pre {
           border: dotted black 1px;
