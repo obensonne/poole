@@ -277,12 +277,12 @@ class Page(object):
     _re_eom = r'^---+ *\n?$'
     _sec_macros = "macros"
     
-    def __init__(self, path, strip, enc_in):
+    def __init__(self, path, strip, opts):
         """Create a new page.
         
         @param path: full path to page input file
         @param strip: portion of path to strip from `path` for deployment
-        @param enc_in: encoding of page input file
+        @param opts: command line options
         
         """
         base = os.path.splitext(path)[0]
@@ -291,8 +291,9 @@ class Page(object):
         self.path = "%s.html" % base
         
         self.macros = MacroDict(self)
+        self.opts = opts
         
-        with codecs.open(path, 'r', enc_in) as fp:
+        with codecs.open(path, 'r', opts.input_enc) as fp:
             self.raw = fp.readlines()
         
         # split raw content into macro definitions and real content
@@ -307,10 +308,10 @@ class Page(object):
 
         # evaluate macro definitions
         tfname = ".page-macros.tmp"
-        with codecs.open(tfname, "w", enc_in) as tf:
+        with codecs.open(tfname, "w", opts.input_enc) as tf:
             tf.write("[%s]\n" % self._sec_macros)
             tf.write(macro_defs)
-        with codecs.open(tfname, "r", enc_in) as tf:
+        with codecs.open(tfname, "r", opts.input_enc) as tf:
             cp = SafeConfigParser()
             cp.readfp(tf)
         os.remove(tfname)
@@ -326,7 +327,7 @@ class Page(object):
 # build site
 #------------------------------------------------------------------------------
 
-def build(project, base_url, enc_in, enc_out):
+def build(project, opts):
     """Build a site project."""
     
     RE_MACRO_FIND = r'(?:^|[^\\]){{ *([^}]+) *}}' # any macro
@@ -391,8 +392,7 @@ def build(project, base_url, enc_in, enc_out):
         for f in files:
             if re.search(RE_FILES_IGNORE, f): continue
             if os.path.splitext(f)[1] in (".md", ".markdown", ".mdown", ".mkd"):
-                page = Page(opj(cwd, f), dir_in, enc_in)
-                page.macros["base_url"] = base_url
+                page = Page(opj(cwd, f), dir_in, opts)
                 pages.append(page)
             else:
                 shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
@@ -416,7 +416,7 @@ def build(project, base_url, enc_in, enc_out):
         
         # expand reserved macros
         out = expand_macro(MACRO_CONTENT, out, skeleton)
-        out = expand_macro(MACRO_ENCODING, enc_out, out)
+        out = expand_macro(MACRO_ENCODING, opts.output_enc, out)
         
         # expand macros, phase 2 (macros used in page.html)
         out = expand_all_macros(out, page.macros)
@@ -432,7 +432,7 @@ def build(project, base_url, enc_in, enc_out):
             out = out.replace('src="%s"' % link, 'src="%s"' % based)
         
         # write HTML page
-        with codecs.open(opj(dir_out, page.path), 'w', enc_out) as fp:
+        with codecs.open(opj(dir_out, page.path), 'w', opts.output_enc) as fp:
             fp.write(out)
 
     print("success: built project")
