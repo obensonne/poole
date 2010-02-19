@@ -310,10 +310,9 @@ class MacroDict(dict):
         if key in self:
             return super(MacroDict, self).__getitem__(key)
         
-        key = key.replace("-", "_")
-        
         # split macro into name and arguments
         name = key.split(None, 1)[0]
+        name = name.replace("-", "_")
         kwargs = {}
         for key, value in [kv.split("=", 1) for kv in key.split()[1:]]:
             if "," in value:
