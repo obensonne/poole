@@ -171,9 +171,17 @@ All you need to adjust the site layout is to edit the `page.html` file.
 ---
 Poole has basic support for blog posts. The macro `post-list` lists all blog
 posts in your site project. Blog posts are all pages whose file name starts
-with `post-YYYY-MM-DD`. As you guess, the post's date is encoded (ISO style) in
-the file name. The macros `title` and optionally `summary` are used as post
-title and summary.
+with `post.YYYY-MM-DD`, e.g. `post.2010-02-13.read-this.md`. As you guess,
+the post's date (ISO style) and title are encoded in the file name. 
+If you don't like long file names you can use the macro `title` to set the
+post's title. The optional macro `summary` sets a summary of the post:
+
+    title: Read this, my friend
+    summary: A very interesting post.
+    ----
+    ... blog post text ...
+
+## Latest Blog Posts
 
 {{ post-list }}
 """ % (MACRO_MENU),
@@ -182,7 +190,14 @@ title and summary.
 
 {{ post-header }}
 
-Bla bla
+THE MOVIE INDUSTRY? IN _MY_ MACBOOK?
+JESUS CHRIST IT'S A BABBY GET IN THE HERO!
+BLESS YOU, KEYBOARD CAT. BLEYBOARD CAT.
+DISREGARD THAT, I TROLL MONGS.
+WHAT _ARE_ EMOS? WE JUST DON'T KNOW.
+
+More nonsense at <http://meme.boxofjunk.ws>.
+
 """
 }
 
