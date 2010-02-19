@@ -230,7 +230,7 @@ class MacroDict(dict):
     Value lookup order:
       * plain dictionary entry (in-page macro)
       * function or variable in macro module (site-global macro)
-      * function in MacroDict (built-in macro)
+      * function macro in BIMS (built-in macro)
 
     If all fail, an empty string is returned and a warning is printed.
     
