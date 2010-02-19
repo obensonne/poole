@@ -402,7 +402,6 @@ def build(project, opts):
     RE_MACRO_SUB_REPL = r'\g<1>%s'
     RE_MACRO_X_PATT = r'\\({{ *[^}]+ *}})' # any escaped macro
     RE_MACRO_X_REPL = r'\g<1>'
-    RE_FILES_IGNORE = r'(^\.)|(~$)' # files to not copy to output
     
     def expand_macro(macro, value, source):
         """Expand macro in source to value."""
@@ -454,10 +453,10 @@ def build(project, opts):
     for cwd, dirs, files in os.walk(dir_in):
         cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
         for sdir in dirs:
-            if re.search(RE_FILES_IGNORE, sdir): continue
+            if re.search(opts.ignore, sdir): continue
             os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
-            if re.search(RE_FILES_IGNORE, f):
+            if re.search(opts.ignore, f):
                 pass
             elif re.search(MARKDOWN_PATT, f):
                 page = Page(opj(cwd, f), dir_in, opts)
@@ -581,8 +580,10 @@ def options():
                   help="encoding of input pages (default: utf-8)")
     og.add_option("", "--output-enc", default="utf-8", metavar="ENC",
                   help="encoding of output pages (default: utf-8)")
-    og.add_option("" , "--date-format", default="%B %d, %Y",
-                  metavar="FMT", help="how to print dates (default: %B %d, %Y)")
+    og.add_option("" , "--date-format", default="%B %d, %Y", metavar="FMT",
+                  help="how to print dates (default: '%B %d, %Y')")
+    og.add_option("" , "--ignore", default=r"(^\.)|(~$)", metavar="REGEX",
+                  help="input files to ignore (default: '(^\.)|(~$)')")
     op.add_option_group(og)
     
     og = optparse.OptionGroup(op, "Serve options")
