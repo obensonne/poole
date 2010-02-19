@@ -401,7 +401,7 @@ def build(project, opts):
     MacroDict.pages = pages
    
     # read page skeleton
-    with codecs.open(opj(project, "page.html"), 'r', enc_in) as fp:
+    with codecs.open(opj(project, "page.html"), 'r', opts.input_enc) as fp:
         skeleton = fp.read()
     
     for page in pages:
@@ -427,7 +427,7 @@ def build(project, opts):
         # make relative links absolute
         links = re.findall(r'(?:src|href)="([^#/][^"]*)"', out)
         for link in links:
-            based = urlparse.urljoin(base_url, link)
+            based = urlparse.urljoin(opts.base_url, link)
             out = out.replace('href="%s"' % link, 'href="%s"' % based)
             out = out.replace('src="%s"' % link, 'src="%s"' % based)
         
@@ -537,7 +537,7 @@ def main():
     if opts.init:
         init(opts.project)
     if opts.build:
-        build(opts.project, opts.base_url, opts.input_enc, opts.output_enc)
+        build(opts.project, opts)
     if opts.serve:
         serve(opts.project, opts.port)
 
