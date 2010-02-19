@@ -242,7 +242,7 @@ class MacroDict(dict):
         """New macro dictionary."""
         
         super(MacroDict, self).__init__()
-        self.__page = page
+        self.page = page
         
     def __getitem__(self, key):
         
@@ -264,7 +264,7 @@ class MacroDict(dict):
 
         # function macro in macro module
         if inspect.isfunction(macro):
-            return macro(self.pages, self.__page, **kwargs)
+            return macro(self.pages, self.page, **kwargs)
         
         # string macro in macro module
         if not macro is None:
@@ -272,11 +272,11 @@ class MacroDict(dict):
         
         # built-in macro
         if name in BIMS:
-            return BIMS[name](self.pages, self.__page, **kwargs)
+            return BIMS[name](self.pages, self.page, **kwargs)
         
         # macro not defined -> warning
         print("warning: page %s uses undefined macro '%s'" %
-              (self.__page.path, name))
+              (self.page.path, name))
         return ""
         
 #------------------------------------------------------------------------------
