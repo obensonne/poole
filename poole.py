@@ -115,8 +115,9 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
     <div id="content">{{ %s }}</div>
     </div>
     <div id="footer">
-        Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>.
-        Licensed as <a href="http://creativecommons.org/licenses/by-sa/3.0">CC-by-SA</a>.
+        Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a> &middot;
+        Licensed as <a href="http://creativecommons.org/licenses/by-sa/3.0">CC-by-SA</a> &middot;
+        <a href="http://validator.w3.org/check?uri=referer">Validate me.</a>
     </div>
 </body>
 </html>
@@ -124,56 +125,54 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
 
 EXAMPLE_PAGES =  {
 "index.md" : """
-%s: Home
+%s: home
 %s: 0
 ---
 
 ## Welcome to Poole
 
-This page's source file is `index.md`. It is written in
-[markdown](http://daringfireball.net/projects/markdown/). It's easier to write
+In Poole you write your pages in [markdown][md]. It's easier to write
 markdown than HTML.
 
-## Navigation menu
+Poole sites by default have a navigation menu, like the one above. It contains
+all pages having the *menu-position* macro defined, for instance like this:
 
-The navigation menu above links to all pages having the *menu* macro defined.
+    menu-position: 1
+    ---
+    Here starts the normal content of the page, everything above `---` are
+    macro definitions.
 
-## Page names
+This page's file name is `index` but the name shown above is **home**.
+That's because this page has the *title* macro defined to `home`.
 
-This page's file name is `index` but the name shown above is **Home**.
-That's because this page has the *title* macro defined to `Home`.
+[md]: http://daringfireball.net/projects/markdown/
 """ % (MACRO_TITLE, MACRO_MENU),
 
-"about.md": """
-%s: About
+"layout.md": """
 %s: 5
 ---
 
-This page's source file is <tt>about.md</tt>.
+Every page of a poole site is based on *one global template file*, `page.html`.
+All you need to adjust the site layout is to edit the `page.html` file.
 
-Did you read the [foobar](barfoo.html)?
-""" % (MACRO_TITLE, MACRO_MENU),
+The blog post *[Pimp your Poole site with a free CSS template][bp]* is a good
+starting point if you'd like to adjust the site layout. 
+
+### Did you ..
+.. read the [foobar](barfoo.html)?
+
+[bp]: http://obensonne.bitbucket.org/blog/20091122-using-a-free-css-templates-in-poole.html
+
+""" % (MACRO_MENU),
                   
 "barfoo.md" : """
-%s: Foobar
 foobaz: boo
 ---
-This page's soure file is *barfoo.md*.
+This page's soure file is *barfoo.md*. It does not show up in the menu, because
+it has not defined the *menu-position* macro. But it has defined a *foobaz*
+macro and it says {{ foobaz }}. Yes, it really says {{ foobaz }}.
 
-### Navigation menu
-
-This page does not show up in the menu, because it has not defined the
-*menu* macro.
-
-### Macros
-
-But it has defined a *foobaz* macro and it says {{ foobaz }}. Yes, it really
-says {{ foobaz }}.
-
-### Layout
-
-You can adjust the site layout in the file *page.html*.
-""" % MACRO_TITLE
+"""
 }
 
 #------------------------------------------------------------------------------
