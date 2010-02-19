@@ -49,10 +49,8 @@ import markdown
 
 import sys
 
-MACRO_TITLE = "title"
-MACRO_MENU = "menu-position"
-MACRO_SUMMARY = "summary"
-MACRO_KEYWORDS = "keywords"
+bim_description = "a poole site"
+bim_keywords = "poole"
 
 def bim_menu(pages, page, tag="span", current="current"):
     """Expands to HTML code for a navigation menu.
@@ -66,8 +64,8 @@ def bim_menu(pages, page, tag="span", current="current"):
     given by keyword `current`.
     
     """
-    mpages = [p for p in pages if MACRO_MENU in p.macros]
-    mpages.sort(key=lambda p: int(p.macros[MACRO_MENU]))
+    mpages = [p for p in pages if "menu-position" in p.macros]
+    mpages.sort(key=lambda p: int(p.macros["menu-position"]))
     
     html = ''
     for p in mpages:
@@ -76,7 +74,7 @@ def bim_menu(pages, page, tag="span", current="current"):
                                                     p.title, tag)
     return html
 
-POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
+_POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
 <div class="post-list-item-title"><a href="%s">%s</a><div>
 <div class="post-list-item-date">%s</div>
 <div class="post-list-item-summary">%s</div>
@@ -93,14 +91,14 @@ def bim_post_list(pages, page, limit=None):
     
     for p in pp:
         date = p.post.strftime(p.opts.date_format)
-        summary = p.macros.get(MACRO_SUMMARY, "")
-        html += POST_LIST_ENTRY_TMPL % (p.url, p.title, date, summary)
+        summary = p.macros.get("summary", "")
+        html += _POST_LIST_ENTRY_TMPL % (p.url, p.title, date, summary)
 
     html += '</div>'
     
     return html
 
-POST_HEADER_TMPL = """<div class="post-header">
+_POST_HEADER_TMPL = """<div class="post-header">
 <div class="post-header-title">%s</div>
 <div class="post-header-date">%s</div>
 <div class="post-header-summary">%s</div>
@@ -115,9 +113,9 @@ def bim_post_header(pages, page):
         sys.exit(1)
     
     date = page.post.strftime(page.opts.date_format)
-    summary = page.macros.get(MACRO_SUMMARY, "")
+    summary = page.macros.get("summary", "")
     
-    return POST_HEADER_TMPL % (page.title, date, summary)
+    return _POST_HEADER_TMPL % (page.title, date, summary)
 
 # BIM_END
 
@@ -125,6 +123,7 @@ def bim_post_header(pages, page):
 # constants
 # -----------------------------------------------------------------------------
 
+MACRO_TITLE = "title"
 MACRO_CONTENT = "__content__"
 MACRO_ENCODING = "__encoding__"
 MARKDOWN_PATT = r'\.(md|mkd|mdown|markdown)$'
@@ -137,16 +136,16 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset={{ %s }}" />
-    <title>poole - {{ %s }}</title>
-    <meta name="description" content="{{ %s }}" />
-    <meta name="keywords" content="{{ %s }}" />
+    <title>poole - {{ title }}</title>
+    <meta name="description" content="{{ description }}" />
+    <meta name="keywords" content="{{ keywords }}" />
     <link rel="stylesheet" type="text/css" href="poole.css" />
 </head>
 <body>
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{{ %s }}</h2>
+         <h2>{{ title }}</h2>
     </div>
     <div id="menu">
         {{ menu }}
@@ -160,14 +159,13 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
     </div>
 </body>
 </html>
-""" % (MACRO_ENCODING, MACRO_TITLE, MACRO_SUMMARY, MACRO_KEYWORDS, MACRO_TITLE,
-       MACRO_CONTENT)
+""" % (MACRO_ENCODING, MACRO_CONTENT)
 
 EXAMPLE_FILES =  {
 
 "index.md" : """
-%s: home
-%s: 0
+title: home
+menu-position: 0
 ---
 
 ## Welcome to Poole
@@ -187,10 +185,10 @@ This page's file name is `index` but the name shown above is **home**.
 That's because this page has the *title* macro defined to `home`.
 
 [md]: http://daringfireball.net/projects/markdown/
-""" % (MACRO_TITLE, MACRO_MENU),
+""",
 
 "layout.md": """
-%s: 5
+menu-position: 5
 ---
 
 Every page of a poole site is based on *one global template file*, `page.html`.
@@ -198,10 +196,10 @@ All you need to adjust the site layout is to
  
  * edit the page template `page.html` and
  * extend or edit the style file `input/poole.css`.
-""" % (MACRO_MENU),
+""",
                   
 "blog.md" : """
-%s: 2
+menu-position: 2
 ---
 Poole has basic support for blog posts. The macro `post-list` lists all blog
 posts in your site project. Blog posts are all pages whose file name starts
@@ -218,7 +216,7 @@ post's title. The optional macro `summary` sets a summary of the post:
 ## Latest Blog Posts
 
 {{ post-list }}
-""" % (MACRO_MENU),
+""",
 
 "post.2010-02-01.Doctors_in_my_penguin.md" : """
 summary: There is a bank in my eel, your argument is invalid.
