@@ -35,7 +35,6 @@ import os.path
 from os.path import join as opj
 import re
 import shutil
-import sys
 import urlparse
 
 from SimpleHTTPServer import SimpleHTTPRequestHandler
@@ -43,21 +42,96 @@ from BaseHTTPServer import HTTPServer
 
 import markdown
 
-#------------------------------------------------------------------------------
-# constants
-#------------------------------------------------------------------------------
+# BIM_START # lines below will be copied into `macros.py` on project init
+# -----------------------------------------------------------------------------
+# built-in macros
+# -----------------------------------------------------------------------------
+
+import sys
 
 MACRO_TITLE = "title"
 MACRO_MENU = "menu-position"
 MACRO_SUMMARY = "summary"
 MACRO_KEYWORDS = "keywords"
+
+def bim_menu(pages, page, tag="span", current="current"):
+    """Expands to HTML code for a navigation menu.
+    
+    The name of any page which has a macro `menu-posistion` defined is
+    included in the menu. Menu positions are sorted by the integer values
+    of `menu-position` (smallest first).
+    
+    Each menu entry is surrounded by the HTML tag given by the keyword
+    `tag`. The current page's tag element is assigned the CSS class
+    given by keyword `current`.
+    
+    """
+    mpages = [p for p in pages if MACRO_MENU in p.macros]
+    mpages.sort(key=lambda p: int(p.macros[MACRO_MENU]))
+    
+    html = ''
+    for p in mpages:
+        style = p.title == page.title and (' class="%s"' % current) or ''
+        html += '<%s%s><a href="%s">%s</a></%s>' % (tag, style, p.url,
+                                                    p.title, tag)
+    return html
+
+POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
+<div class="post-list-item-title"><a href="%s">%s</a><div>
+<div class="post-list-item-date">%s</div>
+<div class="post-list-item-summary">%s</div>
+</div>
+"""
+
+def bim_post_list(pages, page, limit=None):
+
+    pp = [p for p in pages if p.post]
+    pp.sort(cmp=lambda x,y: cmp(x.post, y.post))
+    pp = limit and pp[:int(limit)] or pp
+    
+    html = '<div class="post-list">'
+    
+    for p in pp:
+        date = p.post.strftime(p.opts.date_format)
+        summary = p.macros.get(MACRO_SUMMARY, "")
+        html += POST_LIST_ENTRY_TMPL % (p.url, p.title, date, summary)
+
+    html += '</div>'
+    
+    return html
+
+POST_HEADER_TMPL = """<div class="post-header">
+<div class="post-header-title">%s</div>
+<div class="post-header-date">%s</div>
+<div class="post-header-summary">%s</div>
+</div>
+"""
+
+def bim_post_header(pages, page):
+
+    if not page.post:
+        print("error: page %s uses macro `post-header` but it's filename "
+              "does not match a post filename")
+        sys.exit(1)
+    
+    date = page.post.strftime(page.opts.date_format)
+    summary = page.macros.get(MACRO_SUMMARY, "")
+    
+    return POST_HEADER_TMPL % (page.title, date, summary)
+
+# BIM_END
+
+# -----------------------------------------------------------------------------
+# constants
+# -----------------------------------------------------------------------------
+
 MACRO_CONTENT = "__content__"
 MACRO_ENCODING = "__encoding__"
 MARKDOWN_PATT = r'\.(md|mkd|mdown|markdown)$'
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # example content for a new project
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
@@ -207,84 +281,9 @@ pre {
 """
 }
 
-#--------------------------------------------------------------------------
-# built-in macros
-#--------------------------------------------------------------------------
-
-def bim_menu(pages, page, tag="span", current="current"):
-    """Expands to HTML code for a navigation menu.
-    
-    The name of any page which has a macro `menu-posistion` defined is
-    included in the menu. Menu positions are sorted by the integer values
-    of `menu-position` (smallest first).
-    
-    Each menu entry is surrounded by the HTML tag given by the keyword
-    `tag`. The current page's tag element is assigned the CSS class
-    given by keyword `current`.
-    
-    """
-    mpages = [p for p in pages if MACRO_MENU in p.macros]
-    mpages.sort(key=lambda p: int(p.macros[MACRO_MENU]))
-    
-    html = ''
-    for p in mpages:
-        style = p.title == page.title and (' class="%s"' % current) or ''
-        html += '<%s%s><a href="%s">%s</a></%s>' % (tag, style, p.url,
-                                                    p.title, tag)
-    return html
-
-POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
-<div class="post-list-item-title"><a href="%s">%s</a><div>
-<div class="post-list-item-date">%s</div>
-<div class="post-list-item-summary">%s</div>
-</div>
-"""
-
-def bim_post_list(pages, page, limit=None):
-
-    pp = [p for p in pages if p.post]
-    pp.sort(cmp=lambda x,y: cmp(x.post, y.post))
-    pp = limit and pp[:int(limit)] or pp
-    
-    html = '<div class="post-list">'
-    
-    for p in pp:
-        date = p.post.strftime(p.opts.date_format)
-        summary = p.macros.get(MACRO_SUMMARY, "")
-        html += POST_LIST_ENTRY_TMPL % (p.url, p.title, date, summary)
-
-    html += '</div>'
-    
-    return html
-
-POST_HEADER_TMPL = """<div class="post-header">
-<div class="post-header-title">%s</div>
-<div class="post-header-date">%s</div>
-<div class="post-header-summary">%s</div>
-</div>
-"""
-
-def bim_post_header(pages, page):
-
-    if not page.post:
-        print("error: page %s uses macro `post-header` but it's filename "
-              "does not match a post filename")
-        sys.exit(1)
-    
-    date = page.post.strftime(page.opts.date_format)
-    summary = page.macros.get(MACRO_SUMMARY, "")
-    
-    return POST_HEADER_TMPL % (page.title, date, summary)
-
-BIMS = {
-    "menu": bim_menu,
-    "post_list": bim_post_list,
-    "post_header": bim_post_header,
-}
-
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # macro dictionary
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 class MacroDict(dict):
     """Dictionary merging site and page specific macros.
@@ -292,7 +291,6 @@ class MacroDict(dict):
     Value lookup order:
       * plain dictionary entry (in-page macro)
       * function or variable in macro module (site-global macro)
-      * function macro in BIMS (built-in macro)
 
     If all fail, an empty string is returned and a warning is printed.
     
@@ -332,18 +330,14 @@ class MacroDict(dict):
         if not macro is None:
             return str(macro)
         
-        # built-in macro
-        if name in BIMS:
-            return BIMS[name](self.pages, self.page, **kwargs)
-        
         # macro not defined -> warning
         print("warning: page %s uses undefined macro '%s'" %
               (self.page.fname, name))
         return ""
         
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # page class
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 class Page(object):
     """Abstraction of a source page."""
@@ -408,9 +402,9 @@ class Page(object):
         self.title = self.macros[MACRO_TITLE]
 
         
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # build site
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def build(project, opts):
     """Build a site project."""
@@ -524,9 +518,9 @@ def build(project, opts):
 
     print("success: built project")
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # init site
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def init(project):
     """Initialize a site project."""
@@ -548,11 +542,26 @@ def init(project):
     with open(opj(project, "page.html"), 'w') as fp:
         fp.write(PAGE_HTML)
     
+    bims = None
+    with open(sys.argv[0], 'r') as fp:
+        lines = fp.readlines()
+    for line in lines:
+        if line.startswith("# BIM_START"):
+            bims = ""
+        elif line.startswith("# BIM_END"):
+            break
+        elif bims is not None:
+            bims += line.replace("bim_", "")
+        else:
+            pass # before BIM_START
+    with open(opj(project, "macros.py"), 'w') as fp:
+        fp.write(bims)
+    
     print("success: initialized project")
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # serve site
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def serve(project, port):
     """Temporary serve a site project."""
@@ -566,9 +575,9 @@ def serve(project, port):
     server = HTTPServer(('', port), SimpleHTTPRequestHandler)
     server.serve_forever()
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # options
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def options():
     """Parse and validate command line arguments."""
@@ -620,9 +629,9 @@ def options():
     
     return opts
     
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # main
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def main():
     
