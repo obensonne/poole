@@ -164,9 +164,6 @@ That's because this page has the *title* macro defined to `home`.
 
 Every page of a poole site is based on *one global template file*, `page.html`.
 All you need to adjust the site layout is to edit the `page.html` file.
-
-The blog post *[Pimp your Poole site with a free CSS template][bp]* is a good
-starting point if you'd like to adjust the site layout. 
 """ % (MACRO_MENU),
                   
 "blog.md" : """
