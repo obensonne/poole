@@ -491,8 +491,11 @@ def options():
              "       %prog --serve [OPTIONS] [path/to/project]\n"
              "\n"
              "       Project path is optional, '.' is used as default.")
-           
-    op = optparse.OptionParser(usage=usage)
+    
+    epilog = ("For possible date formats see the table at the end of "
+              "http://docs.python.org/library/datetime.html.")
+    
+    op = optparse.OptionParser(usage=usage, epilog = epilog)
     
     op.add_option("-i" , "--init", action="store_true", default=False,
                   help="init project")
@@ -508,6 +511,8 @@ def options():
                   help="encoding of input pages (default: utf-8)")
     og.add_option("", "--output-enc", default="utf-8", metavar="ENC",
                   help="encoding of output pages (default: utf-8)")
+    og.add_option("" , "--date-format", default="%B %d, %Y",
+                  metavar="FMT", help="how to print dates (default: %B %d, %Y)")
     op.add_option_group(og)
     
     og = optparse.OptionGroup(op, "Serve options")
