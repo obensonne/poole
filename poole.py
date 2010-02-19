@@ -66,51 +66,7 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
     <title>poole - {{ %s }}</title>
     <meta name="description" content="{{ %s }}" />
     <meta name="keywords" content="{{ %s }}" />
-    <style type="text/css" id="internalStyle">
-      body {
-          font-family: sans;
-          width: 800px;
-          margin: 1em auto;
-          color: #2e3436;
-      }
-      div#box {
-          border: solid #2e3436 1px;
-      }
-      div#header, div#menu, div#content, div#footer {
-          padding: 1em;
-      }
-      div#menu {
-          background-color: #2e3436;
-          padding: 0.6em 0 0.6em 0;
-      }
-      #menu span {
-          background-color: #2e3436;
-          font-weight: bold;
-          padding: 0.6em;
-      }
-      #menu span.current {
-          background-color: #555753;
-      }
-      #menu a {
-          color: #fefefc;
-          text-decoration: none;
-      }
-      div#footer {
-          color: gray;
-          text-align: center;
-          font-size: small;
-      }
-      div#footer a {
-          color: gray;
-          text-decoration: none;
-      }
-      pre {
-          border: dotted black 1px;
-          background: #eeeeec;
-          font-size: small;
-          padding: 1em;
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="poole.css" />
 </head>
 <body>
     <div id="box">
@@ -133,7 +89,8 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
 """ % (MACRO_ENCODING, MACRO_TITLE, MACRO_SUMMARY, MACRO_KEYWORDS, MACRO_TITLE,
        MACRO_CONTENT)
 
-EXAMPLE_PAGES =  {
+EXAMPLE_FILES =  {
+
 "index.md" : """
 %s: home
 %s: 0
@@ -163,7 +120,10 @@ That's because this page has the *title* macro defined to `home`.
 ---
 
 Every page of a poole site is based on *one global template file*, `page.html`.
-All you need to adjust the site layout is to edit the `page.html` file.
+All you need to adjust the site layout is to
+ 
+ * edit the page template `page.html` and
+ * extend or edit the style file `input/poole.css`.
 """ % (MACRO_MENU),
                   
 "blog.md" : """
@@ -198,6 +158,52 @@ WHAT _ARE_ EMOS? WE JUST DON'T KNOW.
 
 More nonsense at <http://meme.boxofjunk.ws>.
 
+""",
+
+"poole.css": """
+body {
+    font-family: sans;
+    width: 800px;
+    margin: 1em auto;
+    color: #2e3436;
+}
+div#box {
+    border: solid #2e3436 1px;
+}
+div#header, div#menu, div#content, div#footer {
+    padding: 1em;
+}
+div#menu {
+    background-color: #2e3436;
+    padding: 0.6em 0 0.6em 0;
+}
+#menu span {
+    background-color: #2e3436;
+    font-weight: bold;
+    padding: 0.6em;
+}
+#menu span.current {
+    background-color: #555753;
+}
+#menu a {
+    color: #fefefc;
+    text-decoration: none;
+}
+div#footer {
+    color: gray;
+    text-align: center;
+    font-size: small;
+}
+div#footer a {
+    color: gray;
+    text-decoration: none;
+}
+pre {
+    border: dotted black 1px;
+    background: #eeeeec;
+    font-size: small;
+    padding: 1em;
+}
 """
 }
 
@@ -535,9 +541,9 @@ def init(project):
     os.mkdir(opj(project, "input"))
     os.mkdir(opj(project, "output"))
     
-    for page_file, page_content in EXAMPLE_PAGES.items():
-        with open(opj(project, "input", page_file), 'w') as fp:
-            fp.write(page_content)
+    for fname, content in EXAMPLE_FILES.items():
+        with open(opj(project, "input", fname), 'w') as fp:
+            fp.write(content)
 
     with open(opj(project, "page.html"), 'w') as fp:
         fp.write(PAGE_HTML)
