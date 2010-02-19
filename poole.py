@@ -26,6 +26,7 @@ from __future__ import with_statement
 
 import codecs
 from ConfigParser import SafeConfigParser
+from datetime import datetime
 import glob
 import inspect
 import optparse
@@ -48,8 +49,11 @@ import markdown
 
 MACRO_TITLE = "title"
 MACRO_MENU = "menu-position"
+MACRO_SUMMARY = "summary"
+MACRO_KEYWORDS = "keywords"
 MACRO_CONTENT = "__content__"
 MACRO_ENCODING = "__encoding__"
+MARKDOWN_PATT = r'\.(md|mkd|mdown|markdown)$'
 
 #------------------------------------------------------------------------------
 # example content for a new project
@@ -60,6 +64,8 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset={{ %s }}" />
     <title>Poole - %s</title>
+    <meta name="description" content="{{ %s }}" />
+    <meta name="keywords" content="{{ %s }}" />
     <style type="text/css" id="internalStyle">
       body {
           font-family: sans;
@@ -124,7 +130,8 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
     </div>
 </body>
 </html>
-""" % (MACRO_ENCODING, MACRO_TITLE, MACRO_TITLE, MACRO_CONTENT)
+""" % (MACRO_ENCODING, MACRO_TITLE, MACRO_SUMMARY, MACRO_KEYWORDS, MACRO_TITLE,
+       MACRO_CONTENT)
 
 EXAMPLE_PAGES =  {
 "index.md" : """
@@ -160,21 +167,25 @@ All you need to adjust the site layout is to edit the `page.html` file.
 
 The blog post *[Pimp your Poole site with a free CSS template][bp]* is a good
 starting point if you'd like to adjust the site layout. 
-
-### Did you ..
-.. read the [foobar](barfoo.html)?
-
-[bp]: http://obensonne.bitbucket.org/blog/20091122-using-a-free-css-templates-in-poole.html
-
 """ % (MACRO_MENU),
                   
-"barfoo.md" : """
-foobaz: boo
+"blog.md" : """
+%s: 2
 ---
-This page's soure file is *barfoo.md*. It does not show up in the menu, because
-it has not defined the *menu-position* macro. But it has defined a *foobaz*
-macro and it says {{ foobaz }}. Yes, it really says {{ foobaz }}.
+Poole has basic support for blog posts. The macro `post-list` lists all blog
+posts in your site project. Blog posts are all pages whose file name starts
+with `post-YYYY-MM-DD`. As you guess, the post's date is encoded (ISO style) in
+the file name. The macros `title` and optionally `summary` are used as post
+title and summary.
 
+{{ post-list }}
+""" % (MACRO_MENU),
+
+"post.2010-02-01.example_post.md" : """
+
+{{ post-header }}
+
+Bla bla
 """
 }
 
@@ -204,8 +215,53 @@ def bim_menu(pages, page, tag="span", current="current"):
                                                     p.title, tag)
     return html
 
+POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
+<div class="post-list-item-title"><a href="%s">%s</a><div>
+<div class="post-list-item-date">%s</div>
+<div class="post-list-item-summary">%s</div>
+</div>
+"""
+
+def bim_post_list(pages, page, limit=None):
+
+    pp = [p for p in pages if p.post]
+    pp.sort(cmp=lambda x,y: cmp(x.post, y.post))
+    pp = limit and pp[:int(limit)] or pp
+    
+    html = '<div class="post-list">'
+    
+    for p in pp:
+        date = p.post.strftime(p.opts.date_format)
+        summary = p.macros.get(MACRO_SUMMARY, "")
+        html += POST_LIST_ENTRY_TMPL % (p.url, p.title, date, summary)
+
+    html += '</div>'
+    
+    return html
+
+POST_HEADER_TMPL = """<div class="post-header">
+<div class="post-header-title">%s</div>
+<div class="post-header-date">%s</div>
+<div class="post-header-summary">%s</div>
+</div>
+"""
+
+def bim_post_header(pages, page):
+
+    if not page.post:
+        print("error: page %s uses macro `post-header` but it's filename "
+              "does not match a post filename")
+        sys.exit(1)
+    
+    date = page.post.strftime(page.opts.date_format)
+    summary = page.macros.get(MACRO_SUMMARY, "")
+    
+    return POST_HEADER_TMPL % (page.title, date, summary)
+
 BIMS = {
     "menu": bim_menu,
+    "post_list": bim_post_list,
+    "post_header": bim_post_header,
 }
 
 #------------------------------------------------------------------------------
@@ -264,7 +320,7 @@ class MacroDict(dict):
         
         # macro not defined -> warning
         print("warning: page %s uses undefined macro '%s'" %
-              (self.page.path, name))
+              (self.page.fname, name))
         return ""
         
 #------------------------------------------------------------------------------
@@ -277,23 +333,24 @@ class Page(object):
     _re_eom = r'^---+ *\n?$'
     _sec_macros = "macros"
     
-    def __init__(self, path, strip, opts):
+    def __init__(self, fname, strip, opts):
         """Create a new page.
         
-        @param path: full path to page input file
-        @param strip: portion of path to strip from `path` for deployment
+        @param fname: full path to page input file
+        @param strip: portion of path to strip from `fname` for deployment
         @param opts: command line options
         
         """
-        base = os.path.splitext(path)[0]
-        base = base[len(strip):].lstrip(os.path.sep)
-        self.url = "%s.html" % base.replace(os.path.sep, "/")
-        self.path = "%s.html" % base
+        self.url = re.sub(MARKDOWN_PATT, ".html", fname)
+        self.url = self.url[len(strip):].lstrip(os.path.sep)
+        self.url = self.url.replace(os.path.sep, "/")
+        
+        self.fname = fname
         
         self.macros = MacroDict(self)
         self.opts = opts
         
-        with codecs.open(path, 'r', opts.input_enc) as fp:
+        with codecs.open(fname, 'r', opts.input_enc) as fp:
             self.raw = fp.readlines()
         
         # split raw content into macro definitions and real content
@@ -318,10 +375,20 @@ class Page(object):
         for key in cp.options(self._sec_macros):
             self.macros[key] = cp.get(self._sec_macros, key)
         
+        basename = os.path.basename(fname)
+        
+        # if page is a blog post, set post to it's date
+        post_patt = r'post.([0-9]+-[0-9]+-[0-9]+).(.*)%s' % MARKDOWN_PATT
+        pm = re.match(post_patt, basename)
+        self.post = pm and datetime.strptime(pm.group(1), "%Y-%m-%d") or None
+
         # page title (fall back to file name if macro 'title' is not set)
         if not MACRO_TITLE in self.macros:
-            self.macros[MACRO_TITLE] = os.path.basename(base)
+            title = pm and pm.group(2) or os.path.splitext(basename)[0]
+            title = title.replace("_", " ")
+            self.macros[MACRO_TITLE] = title
         self.title = self.macros[MACRO_TITLE]
+
         
 #------------------------------------------------------------------------------
 # build site
@@ -390,8 +457,9 @@ def build(project, opts):
             if re.search(RE_FILES_IGNORE, sdir): continue
             os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
-            if re.search(RE_FILES_IGNORE, f): continue
-            if os.path.splitext(f)[1] in (".md", ".markdown", ".mdown", ".mkd"):
+            if re.search(RE_FILES_IGNORE, f):
+                pass
+            elif re.search(MARKDOWN_PATT, f):
                 page = Page(opj(cwd, f), dir_in, opts)
                 pages.append(page)
             else:
@@ -406,7 +474,7 @@ def build(project, opts):
     
     for page in pages:
         
-        print("info: processing page %s" % page.path)
+        print("info: processing %s" % page.fname)
         
         # expand macros, phase 1 (macros used in page source)
         out = expand_all_macros(page.source, page.macros)
@@ -432,7 +500,9 @@ def build(project, opts):
             out = out.replace('src="%s"' % link, 'src="%s"' % based)
         
         # write HTML page
-        with codecs.open(opj(dir_out, page.path), 'w', opts.output_enc) as fp:
+        fname = page.fname.replace(dir_in, dir_out)
+        fname = re.sub(MARKDOWN_PATT, ".html", fname) 
+        with codecs.open(fname, 'w', opts.output_enc) as fp:
             fp.write(out)
 
     print("success: built project")
