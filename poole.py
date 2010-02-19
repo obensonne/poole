@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 # =============================================================================
 #
@@ -390,14 +391,19 @@ def build(project, base_url, enc_in, enc_out):
     MacroDict.module = site_macros_module
         
     # read and render pages
+    ignore = [RE_FILES_IGNORE]
+    if site_macros_module and hasattr(site_macros_module, "IGNORE"):
+        ignore += site_macros_module.IGNORE
     pages = []
     for cwd, dirs, files in os.walk(dir_in):
         cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
         for sdir in dirs:
-            if re.search(RE_FILES_IGNORE, sdir): continue
+            for ip in ignore:
+                if re.search(ip, sdir): continue
             os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
-            if re.search(RE_FILES_IGNORE, f): continue
+            for ip in ignore:
+                if re.search(ip, f): continue
             if os.path.splitext(f)[1] in (".md", ".markdown", "mdown"):
                 page = Page(opj(cwd, f), dir_in, enc_in)
                 page.macros["base_url"] = base_url
