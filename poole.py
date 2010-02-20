@@ -230,7 +230,7 @@ post's title. The optional macro `summary` sets a summary of the post:
 {{ post-list }}
 """,
 
-"post.2010-02-01.Doctors_in_my_penguin.md" : """
+"blog.2010-02-01.Doctors_in_my_penguin.md" : """
 summary: There is a bank in my eel, your argument is invalid.
 ---
 {{ post-header }}
