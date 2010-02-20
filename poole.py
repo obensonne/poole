@@ -47,6 +47,7 @@ import markdown
 # built-in macros
 # -----------------------------------------------------------------------------
 
+from datetime import datetime
 import sys
 
 bim_description = "a poole site"
@@ -69,9 +70,12 @@ def bim_menu(pages, page, tag="span", current="current"):
     
     html = ''
     for p in mpages:
-        style = p.title == page.title and (' class="%s"' % current) or ''
-        html += '<%s%s><a href="%s">%s</a></%s>' % (tag, style, p.url,
-                                                    p.title, tag)
+        if p.macros["title"] == page.macros["title"]:
+            style = ' class="%s"'
+        else:
+            style = ''
+        html += ('<%s%s><a href="%s">%s</a></%s>' %
+                 (tag, style, p.url, p.macros["title"], tag))
     return html
 
 _POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
@@ -81,18 +85,25 @@ _POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
 </div>
 """
 
+def _post_date(page):
+    """Get a post's date as a nice string."""
+    
+    date = datetime.strptime(page.macros["date"], "%Y-%m-%d")
+    date = date.strftime("%B %d, %Y")
+    return date
+
 def bim_post_list(pages, page, limit=None):
 
-    pp = [p for p in pages if p.post]
-    pp.sort(cmp=lambda x,y: cmp(x.post, y.post))
+    pp = [p for p in pages if p.macros["post"]]
+    pp.sort(key=lambda p: datetime.strptime(p.macros["date"], "%Y-%m-%d"))
     pp = limit and pp[:int(limit)] or pp
-    
     html = '<div class="post-list">'
     
     for p in pp:
-        date = p.post.strftime(p.opts.date_format)
-        summary = p.macros.get("summary", "")
-        html += _POST_LIST_ENTRY_TMPL % (p.url, p.title, date, summary)
+        title = p.macros["post"]
+        date = _post_date(p)
+        summary = p.macros["summary"]
+        html += _POST_LIST_ENTRY_TMPL % (p.url, title, date, summary)
 
     html += '</div>'
     
@@ -107,15 +118,16 @@ _POST_HEADER_TMPL = """<div class="post-header">
 
 def bim_post_header(pages, page):
 
-    if not page.post:
+    if not page.macros["post"]:
         print("error: page %s uses macro `post-header` but it's filename "
               "does not match a post filename")
         sys.exit(1)
     
-    date = page.post.strftime(page.opts.date_format)
-    summary = page.macros.get("summary", "")
+    title = page.macros["post"]
+    date = _post_date(page)
+    summary = page.macros["summary"]
     
-    return _POST_HEADER_TMPL % (page.title, date, summary)
+    return _POST_HEADER_TMPL % (title, date, summary)
 
 # BIM_END
 
@@ -126,7 +138,7 @@ def bim_post_header(pages, page):
 MACRO_TITLE = "title"
 MACRO_CONTENT = "__content__"
 MACRO_ENCODING = "__encoding__"
-MARKDOWN_PATT = r'\.(md|mkd|mdown|markdown)$'
+MKD_PATT = r'\.(md|mkd|mdown|markdown)$'
 
 # -----------------------------------------------------------------------------
 # example content for a new project
@@ -351,7 +363,7 @@ class Page(object):
         @param opts: command line options
         
         """
-        self.url = re.sub(MARKDOWN_PATT, ".html", fname)
+        self.url = re.sub(MKD_PATT, ".html", fname)
         self.url = self.url[len(strip):].lstrip(os.path.sep)
         self.url = self.url.replace(os.path.sep, "/")
         
@@ -387,18 +399,14 @@ class Page(object):
         
         basename = os.path.basename(fname)
         
+        fpatt = r'(\w+)(?:\.([0-9]+-[0-9]+-[0-9]+))?(?:\.(.*))?%s' % MKD_PATT
+        title, date, post, ext = re.match(fpatt, basename).groups()
+        title = title.replace("_", " ")
+        post = post and post.replace("_", " ") or None
+        self.macros["title"] = self.macros.get("title", title)
+        self.macros["date"] = self.macros.get("date", date)
+        self.macros["post"] = self.macros.get("post", post)
         # if page is a blog post, set post to it's date
-        post_patt = r'post.([0-9]+-[0-9]+-[0-9]+).(.*)%s' % MARKDOWN_PATT
-        pm = re.match(post_patt, basename)
-        self.post = pm and datetime.strptime(pm.group(1), "%Y-%m-%d") or None
-
-        # page title (fall back to file name if macro 'title' is not set)
-        if not MACRO_TITLE in self.macros:
-            title = pm and pm.group(2) or os.path.splitext(basename)[0]
-            title = title.replace("_", " ")
-            self.macros[MACRO_TITLE] = title
-        self.title = self.macros[MACRO_TITLE]
-
         
 # -----------------------------------------------------------------------------
 # build site
@@ -468,7 +476,7 @@ def build(project, opts):
         for f in files:
             if re.search(opts.ignore, f):
                 pass
-            elif re.search(MARKDOWN_PATT, f):
+            elif re.search(MKD_PATT, f):
                 page = Page(opj(cwd, f), dir_in, opts)
                 pages.append(page)
             else:
@@ -510,7 +518,7 @@ def build(project, opts):
         
         # write HTML page
         fname = page.fname.replace(dir_in, dir_out)
-        fname = re.sub(MARKDOWN_PATT, ".html", fname) 
+        fname = re.sub(MKD_PATT, ".html", fname) 
         with codecs.open(fname, 'w', opts.output_enc) as fp:
             fp.write(out)
 
