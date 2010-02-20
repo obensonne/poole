@@ -78,11 +78,11 @@ def bim_menu(pages, page, tag="span", current="current"):
                  (tag, style, p["url"], p["title"], tag))
     return html
 
-_POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
-<div class="post-list-item-title"><a href="%s">%s</a><div>
-<div class="post-list-item-date">%s</div>
-<div class="post-list-item-summary">%s</div>
-</div>
+_POST_LIST_ENTRY_TMPL = """<li class="post-list-item">
+<p class="post-list-item-title"><a href="%s">%s</a><p>
+<p class="post-list-item-date">%s</p>
+<p class="post-list-item-summary">%s</p>
+</li>
 """
 
 def _post_date(page):
@@ -97,7 +97,7 @@ def bim_post_list(pages, page, limit=None):
     pp = [p for p in pages if p["post"]]
     pp.sort(key=lambda p: datetime.strptime(p["date"], "%Y-%m-%d"))
     pp = limit and pp[:int(limit)] or pp
-    html = '<div class="post-list">'
+    html = '<ul class="post-list">'
     
     for p in pp:
         title = p["post"]
@@ -105,14 +105,14 @@ def bim_post_list(pages, page, limit=None):
         summary = p["summary"]
         html += _POST_LIST_ENTRY_TMPL % (p["url"], title, date, summary)
 
-    html += '</div>'
+    html += '</ul>'
     
     return html
 
 _POST_HEADER_TMPL = """<div class="post-header">
-<div class="post-header-title">%s</div>
-<div class="post-header-date">%s</div>
-<div class="post-header-summary">%s</div>
+<h2 class="post-header-title">%s</h2>
+<p class="post-header-date">%s</p>
+<p class="post-header-summary">%s</p>
 </div>
 """
 
@@ -200,7 +200,7 @@ That's because this page has the *title* macro defined to `home`.
 """,
 
 "layout.md": """
-menu-position: 5
+menu-position: 3
 ---
 
 Every page of a poole site is based on *one global template file*, `page.html`.
@@ -211,23 +211,27 @@ All you need to adjust the site layout is to
 """,
                   
 "blog.md" : """
-menu-position: 2
+menu-position: 5
 ---
 Poole has basic support for blog posts. The macro `post-list` lists all blog
-posts in your site project. Blog posts are all pages whose file name starts
-with `post.YYYY-MM-DD`, e.g. `post.2010-02-13.read-this.md`. As you guess,
-the post's date (ISO style) and title are encoded in the file name. 
-If you don't like long file names you can use the macro `title` to set the
-post's title. The optional macro `summary` sets a summary of the post:
+posts in your site project. Blog posts are all pages whose file name has a
+structure like `page-title.YYYY-MM-DD.post-title`, e.g.
+`blog.201010-02-27.read_this.md`. You don't have to put the
+date and post-title into the file name, you can also set them via macros in
+the page:
 
-    title: Read this, my friend
+    post: Read this, my friend
+    date: 2010-02-27
     summary: A very interesting post.
     ----
     ... blog post text ...
 
+Do whatever fit's best in your case.
+
 ## Latest Blog Posts
 
 {{ post-list }}
+
 """,
 
 "blog.2010-02-01.Doctors_in_my_penguin.md" : """
@@ -289,6 +293,7 @@ pre {
     font-size: small;
     padding: 1em;
 }
+
 """
 }
 
