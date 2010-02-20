@@ -355,7 +355,7 @@ class Page(dict):
         
         basename = os.path.basename(fname)
         
-        fpatt = r'(\w+)(?:\.([0-9]+-[0-9]+-[0-9]+))?(?:\.(.*))?%s' % MKD_PATT
+        fpatt = r'([\w-]+)(?:\.([0-9]+-[0-9]+-[0-9]+))?(?:\.(.*))?%s' % MKD_PATT
         title, date, post, ext = re.match(fpatt, basename).groups()
         title = title.replace("_", " ")
         post = post and post.replace("_", " ") or None
