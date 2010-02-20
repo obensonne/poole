@@ -65,17 +65,17 @@ def bim_menu(pages, page, tag="span", current="current"):
     given by keyword `current`.
     
     """
-    mpages = [p for p in pages if "menu-position" in p.macros]
-    mpages.sort(key=lambda p: int(p.macros["menu-position"]))
+    mpages = [p for p in pages if "menu-position" in p]
+    mpages.sort(key=lambda p: int(p["menu-position"]))
     
     html = ''
     for p in mpages:
-        if p.macros["title"] == page.macros["title"]:
+        if p["title"] == page["title"]:
             style = ' class="%s"'
         else:
             style = ''
         html += ('<%s%s><a href="%s">%s</a></%s>' %
-                 (tag, style, p.url, p.macros["title"], tag))
+                 (tag, style, p["url"], p["title"], tag))
     return html
 
 _POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
@@ -88,22 +88,22 @@ _POST_LIST_ENTRY_TMPL = """<div class="post-list-item">
 def _post_date(page):
     """Get a post's date as a nice string."""
     
-    date = datetime.strptime(page.macros["date"], "%Y-%m-%d")
+    date = datetime.strptime(page["date"], "%Y-%m-%d")
     date = date.strftime("%B %d, %Y")
     return date
 
 def bim_post_list(pages, page, limit=None):
 
-    pp = [p for p in pages if p.macros["post"]]
-    pp.sort(key=lambda p: datetime.strptime(p.macros["date"], "%Y-%m-%d"))
+    pp = [p for p in pages if p["post"]]
+    pp.sort(key=lambda p: datetime.strptime(p["date"], "%Y-%m-%d"))
     pp = limit and pp[:int(limit)] or pp
     html = '<div class="post-list">'
     
     for p in pp:
-        title = p.macros["post"]
+        title = p["post"]
         date = _post_date(p)
-        summary = p.macros["summary"]
-        html += _POST_LIST_ENTRY_TMPL % (p.url, title, date, summary)
+        summary = p["summary"]
+        html += _POST_LIST_ENTRY_TMPL % (p["url"], title, date, summary)
 
     html += '</div>'
     
@@ -118,14 +118,14 @@ _POST_HEADER_TMPL = """<div class="post-header">
 
 def bim_post_header(pages, page):
 
-    if not page.macros["post"]:
+    if not page["post"]:
         print("error: page %s uses macro `post-header` but it's filename "
               "does not match a post filename")
         sys.exit(1)
     
-    title = page.macros["post"]
+    title = page["post"]
     date = _post_date(page)
-    summary = page.macros["summary"]
+    summary = page["summary"]
     
     return _POST_HEADER_TMPL % (title, date, summary)
 
@@ -293,64 +293,14 @@ pre {
 }
 
 # -----------------------------------------------------------------------------
-# macro dictionary
-# -----------------------------------------------------------------------------
-
-class MacroDict(dict):
-    """Dictionary merging site and page specific macros.
-    
-    Value lookup order:
-      * plain dictionary entry (in-page macro)
-      * function or variable in macro module (site-global macro)
-
-    If all fail, an empty string is returned and a warning is printed.
-    
-    """
-    pages = None
-    module = None
-    
-    def __init__(self, page):
-        """New macro dictionary."""
-        
-        super(MacroDict, self).__init__()
-        self.page = page
-        
-    def __getitem__(self, key):
-        
-        # in-page macro definition
-        if key in self:
-            return super(MacroDict, self).__getitem__(key)
-        
-        # split macro into name and arguments
-        name = key.split(None, 1)[0]
-        name = name.replace("-", "_")
-        kwargs = {}
-        for key, value in [kv.split("=", 1) for kv in key.split()[1:]]:
-            if "," in value:
-                value = [v.strip() for v in value.split(",")]
-            kwargs[str(key)] = value
-        
-        macro = getattr(self.module, name, None)
-
-        # function macro in macro module
-        if inspect.isfunction(macro):
-            return macro(self.pages, self.page, **kwargs)
-        
-        # string macro in macro module
-        if not macro is None:
-            return str(macro)
-        
-        # macro not defined -> warning
-        print("warning: page %s uses undefined macro '%s'" %
-              (self.page.fname, name))
-        return ""
-        
-# -----------------------------------------------------------------------------
 # page class
 # -----------------------------------------------------------------------------
 
-class Page(object):
+class Page(dict):
     """Abstraction of a source page."""
+    
+    all_pages = None
+    macro_module = None
     
     _re_eom = r'^---+ *\n?$'
     _sec_macros = "macros"
@@ -363,13 +313,14 @@ class Page(object):
         @param opts: command line options
         
         """
-        self.url = re.sub(MKD_PATT, ".html", fname)
-        self.url = self.url[len(strip):].lstrip(os.path.sep)
-        self.url = self.url.replace(os.path.sep, "/")
+        super(Page, self).__init__()
+        
+        self["url"] = re.sub(MKD_PATT, ".html", fname)
+        self["url"] = self["url"][len(strip):].lstrip(os.path.sep)
+        self["url"] = self["url"].replace(os.path.sep, "/")
         
         self.fname = fname
         
-        self.macros = MacroDict(self)
         self.opts = opts
         
         with codecs.open(fname, 'r', opts.input_enc) as fp:
@@ -395,7 +346,7 @@ class Page(object):
             cp.readfp(tf)
         os.remove(tfname)
         for key in cp.options(self._sec_macros):
-            self.macros[key] = cp.get(self._sec_macros, key)
+            self[key] = cp.get(self._sec_macros, key)
         
         basename = os.path.basename(fname)
         
@@ -403,11 +354,40 @@ class Page(object):
         title, date, post, ext = re.match(fpatt, basename).groups()
         title = title.replace("_", " ")
         post = post and post.replace("_", " ") or None
-        self.macros["title"] = self.macros.get("title", title)
-        self.macros["date"] = self.macros.get("date", date)
-        self.macros["post"] = self.macros.get("post", post)
+        self["title"] = self.get("title", title)
+        self["date"] = self.get("date", date)
+        self["post"] = self.get("post", post)
         # if page is a blog post, set post to it's date
         
+    def __getitem__(self, key):
+        
+        # in-page macro definition
+        if key in self:
+            return super(Page, self).__getitem__(key)
+        
+        # split macro into name and arguments
+        name = key.split(None, 1)[0]
+        name = name.replace("-", "_")
+        kwargs = {}
+        for key, value in [kv.split("=", 1) for kv in key.split()[1:]]:
+            if "," in value:
+                value = [v.strip() for v in value.split(",")]
+            kwargs[str(key)] = value
+        
+        macro = getattr(self.macro_module, name, None)
+
+        # function macro in macro macro_module
+        if inspect.isfunction(macro):
+            return macro(self.all_pages, self, **kwargs)
+        
+        # string macro in macro macro_module
+        if macro is not None:
+            return str(macro)
+        
+        # macro not defined -> warning
+        print("warning: page %s uses undefined macro '%s'" % (self.fname, name))
+        return ""
+
 # -----------------------------------------------------------------------------
 # build site
 # -----------------------------------------------------------------------------
@@ -457,14 +437,14 @@ def build(project, opts):
     if not os.path.exists(dir_out):
         os.mkdir(dir_out)
     
-    # import site macros module
+    # import site macros macro_module
     sys.path.insert(0, project)
     try:
         import macros as site_macros_module
     except ImportError:
         site_macros_module = None
     del(sys.path[0])
-    MacroDict.module = site_macros_module
+    Page.macro_module = site_macros_module
         
     # read and render pages
     pages = []
@@ -482,8 +462,8 @@ def build(project, opts):
             else:
                 shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
 
-    # make list of pages available in macro dictionaries
-    MacroDict.pages = pages
+    # make list of all pages available in page objects
+    Page.all_pages = pages
    
     # read page skeleton
     with codecs.open(opj(project, "page.html"), 'r', opts.input_enc) as fp:
@@ -494,7 +474,7 @@ def build(project, opts):
         print("info: processing %s" % page.fname)
         
         # expand macros, phase 1 (macros used in page source)
-        out = expand_all_macros(page.source, page.macros)
+        out = expand_all_macros(page.source, page)
         
         # convert to HTML
         out = markdown.Markdown().convert(out)
@@ -504,7 +484,7 @@ def build(project, opts):
         out = expand_macro(MACRO_ENCODING, opts.output_enc, out)
         
         # expand macros, phase 2 (macros used in page.html)
-        out = expand_all_macros(out, page.macros)
+        out = expand_all_macros(out, page)
         
         # un-escape escaped macros
         out = re.sub(RE_MACRO_X_PATT, RE_MACRO_X_REPL, out)
