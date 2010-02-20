@@ -71,7 +71,7 @@ def bim_menu(pages, page, tag="span", current="current"):
     html = ''
     for p in mpages:
         if p["title"] == page["title"]:
-            style = ' class="%s"'
+            style = ' class="%s"' % current
         else:
             style = ''
         html += ('<%s%s><a href="%s">%s</a></%s>' %
