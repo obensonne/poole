@@ -363,7 +363,7 @@ def build(project, opts):
         stdout = sys.stdout
         sys.stdout = StringIO.StringIO()
         pycode.execute(page.all_pages, page)
-        repl = sys.stdout.getvalue()
+        repl = sys.stdout.getvalue()[:-1] # remove last line break
         sys.stdout = stdout
         shutil.rmtree(dname)
         return "%s%s" % (m.group(1), repl)
