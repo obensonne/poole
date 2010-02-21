@@ -338,6 +338,15 @@ class Page(dict):
 # build site
 # -----------------------------------------------------------------------------
 
+PYCODE_HEADER="""
+import sys
+sys.path.insert(0, "%s")
+try:
+    from macros import *
+except ImportError:
+    pass
+"""
+
 def build(project, opts):
     """Build a site project."""
     
@@ -355,13 +364,14 @@ def build(project, opts):
         dname = opj(opts.project, ".poole.tmp")
         shutil.rmtree(dname, ignore_errors=True)
         os.mkdir(dname)
-        fname = opj(dname, "pyblock.py")
+        fname = opj(dname, "pycode.py")
         with open(fname, "w") as fp:
-            fp.write("def pyblock(pages, page):\n")
-            lines = ["    %s" % l for l in code.split("\n")]
+            fp.write(PYCODE_HEADER % opts.project)
+            fp.write("def execute(pages, page):\n")
+            lines = ["    %s" % l for l in code.split("\n")] # indent lines
             fp.write("\n".join(lines))
-        pyblock = imp.load_source("pyblock", fname)
-        repl = str(pyblock.pyblock(page.all_pages, page))
+        pycode = imp.load_source("pycode", fname)
+        repl = str(pycode.execute(page.all_pages, page))
         shutil.rmtree(dname)
         return "%s%s" % (m.group(1), repl)
     
