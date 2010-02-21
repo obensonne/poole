@@ -36,8 +36,9 @@ import os.path
 from os.path import join as opj
 import re
 import shutil
-import urlparse
+import StringIO
 import sys
+import urlparse
 
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
@@ -97,13 +98,10 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
 mpages = [p for p in pages if "menu-position" in p]
 mpages.sort(key=lambda p: int(p["menu-position"]))
 
-html = ''
 for p in mpages:
     style = p["title"] == page["title"] and ' class="current"' or ''
-    html += '<span%%s>' %% style
-    html += '<a href="%%s">%%s</a>' %% (p["url"], p["title"])
-    html += '</span>'
-return html
+    link = '<a href="%%s">%%s</a>' %% (p["url"], p["title"])
+    print '<span%%s>%%s</span>' %% (style, link)
 %%}
     </div>
     <div id="content">{{ %s }}</div>
@@ -176,17 +174,19 @@ Do whatever fit's best in your case.
 
 ### Latest Blog Posts
 
+The following list of blog posts has been built by inline Python code in
+`input/blog.md`.
+
 {%
 from datetime import datetime
 pp = [p for p in pages if p["post"]]
 pp.sort(key=lambda p: datetime.strptime(p["date"], "%Y-%m-%d"))
-md = ''
 for p in pp[:5]:
     title = p["post"]
     date = datetime.strptime(p["date"], "%Y-%m-%d").strftime("%B %d, %Y")
-    md += '  * [**%s**](%s) - %s' % (p["post"], p["url"], date)
-    md += p["summary"] and '<br/>    *%s*\\n' % p["summary"] or '\\n'
-return md
+    md = '  * [**%s**](%s) - %s' % (p["post"], p["url"], date)
+    md += p["summary"] and '<br/>\\n    *%s*' % p["summary"] or ''
+    print(md)
 %}
 """,
 
@@ -372,7 +372,11 @@ def build(project, opts):
             lines = ["    %s" % l for l in code.split("\n")] # indent lines
             fp.write("\n".join(lines))
         pycode = imp.load_source("pycode", fname)
-        repl = str(pycode.execute(page.all_pages, page))
+        stdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
+        pycode.execute(page.all_pages, page)
+        repl = sys.stdout.getvalue()
+        sys.stdout = stdout
         shutil.rmtree(dname)
         return "%s%s" % (m.group(1), repl)
     
