@@ -29,6 +29,7 @@ from ConfigParser import SafeConfigParser
 from datetime import datetime
 import glob
 import inspect
+import imp
 import optparse
 import os
 import os.path
@@ -36,106 +37,38 @@ from os.path import join as opj
 import re
 import shutil
 import urlparse
+import sys
 
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 
 import markdown
 
-# BIM_START # lines below will be copied into `macros.py` on project init
-# -----------------------------------------------------------------------------
-# built-in macros
-# -----------------------------------------------------------------------------
 
-from datetime import datetime
-import sys
-
-bim_description = "a poole site"
-bim_keywords = "poole"
-
-def bim_menu(pages, page, tag="span", current="current"):
-    """Expands to HTML code for a navigation menu.
-    
-    The name of any page which has a macro `menu-posistion` defined is
-    included in the menu. Menu positions are sorted by the integer values
-    of `menu-position` (smallest first).
-    
-    Each menu entry is surrounded by the HTML tag given by the keyword
-    `tag`. The current page's tag element is assigned the CSS class
-    given by keyword `current`.
-    
-    """
-    mpages = [p for p in pages if "menu-position" in p]
-    mpages.sort(key=lambda p: int(p["menu-position"]))
-    
-    html = ''
-    for p in mpages:
-        if p["title"] == page["title"]:
-            style = ' class="%s"' % current
-        else:
-            style = ''
-        html += ('<%s%s><a href="%s">%s</a></%s>' %
-                 (tag, style, p["url"], p["title"], tag))
-    return html
-
-_POST_LIST_ENTRY_TMPL = """<li class="post-list-item">
-<p class="post-list-item-title"><a href="%s">%s</a><p>
-<p class="post-list-item-date">%s</p>
-<p class="post-list-item-summary">%s</p>
-</li>
-"""
-
-def _post_date(page):
-    """Get a post's date as a nice string."""
-    
-    date = datetime.strptime(page["date"], "%Y-%m-%d")
-    date = date.strftime("%B %d, %Y")
-    return date
-
-def bim_post_list(pages, page, limit=None):
-
-    pp = [p for p in pages if p["post"]]
-    pp.sort(key=lambda p: datetime.strptime(p["date"], "%Y-%m-%d"))
-    pp = limit and pp[:int(limit)] or pp
-    html = '<ul class="post-list">'
-    
-    for p in pp:
-        title = p["post"]
-        date = _post_date(p)
-        summary = p["summary"]
-        html += _POST_LIST_ENTRY_TMPL % (p["url"], title, date, summary)
-
-    html += '</ul>'
-    
-    return html
-
-_POST_HEADER_TMPL = """<div class="post-header">
-<h2 class="post-header-title">%s</h2>
-<p class="post-header-date">%s</p>
-<p class="post-header-summary">%s</p>
-</div>
-"""
-
-def bim_post_header(pages, page):
-
-    if not page["post"]:
-        print("error: page %s uses macro `post-header` but it's filename "
-              "does not match a post filename")
-        sys.exit(1)
-    
-    title = page["post"]
-    date = _post_date(page)
-    summary = page["summary"]
-    
-    return _POST_HEADER_TMPL % (title, date, summary)
-
-# BIM_END
+#_POST_HEADER_TMPL = """<div class="post-header">
+#<h2 class="post-header-title">%s</h2>
+#<p class="post-header-date">%s</p>
+#<p class="post-header-summary">%s</p>
+#</div>
+#"""
+#
+#def bim_post_header(pages, page):
+#
+#    if not page["post"]:
+#        print("error: page %s uses macro `post-header` but it's filename "
+#              "does not match a post filename")
+#        sys.exit(1)
+#    
+#    title = page["post"]
+#    date = _post_date(page)
+#    summary = page["summary"]
+#    
+#    return _POST_HEADER_TMPL % (title, date, summary)
 
 # -----------------------------------------------------------------------------
 # constants
 # -----------------------------------------------------------------------------
 
-MACRO_TITLE = "title"
 MACRO_CONTENT = "__content__"
 MACRO_ENCODING = "__encoding__"
 MKD_PATT = r'\.(md|mkd|mdown|markdown)$'
@@ -160,7 +93,18 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
          <h2>{{ title }}</h2>
     </div>
     <div id="menu">
-        {{ menu }}
+{%%
+mpages = [p for p in pages if "menu-position" in p]
+mpages.sort(key=lambda p: int(p["menu-position"]))
+
+html = ''
+for p in mpages:
+    style = p["title"] == page["title"] and ' class="current"' or ''
+    html += '<span%%s>' %% style
+    html += '<a href="%%s">%%s</a>' %% (p["url"], p["title"])
+    html += '</span>'
+return html
+%%}
     </div>
     <div id="content">{{ %s }}</div>
     </div>
@@ -228,16 +172,36 @@ the page:
 
 Do whatever fit's best in your case.
 
-## Latest Blog Posts
+---
 
-{{ post-list }}
+### Latest Blog Posts
 
+{%
+from datetime import datetime
+pp = [p for p in pages if p["post"]]
+pp.sort(key=lambda p: datetime.strptime(p["date"], "%Y-%m-%d"))
+md = ''
+for p in pp[:5]:
+    title = p["post"]
+    date = datetime.strptime(p["date"], "%Y-%m-%d").strftime("%B %d, %Y")
+    md += '  * [**%s**](%s) - %s' % (p["post"], p["url"], date)
+    md += p["summary"] and '<br/>    *%s*\\n' % p["summary"] or '\\n'
+return md
+%}
 """,
 
 "blog.2010-02-01.Doctors_in_my_penguin.md" : """
 summary: There is a bank in my eel, your argument is invalid.
 ---
-{{ post-header }}
+## {{ post }}
+
+Posted at
+{%
+from datetime import datetime
+return datetime.strptime(page["date"], "%Y-%m-%d").strftime("%B %d, %Y")
+%}
+
+*{{ summary }}*
 
 THE MOVIE INDUSTRY? IN *MY* MACBOOK?
 JESUS CHRIST IT'S A BABBY GET IN THE HERO!
@@ -246,7 +210,6 @@ DISREGARD THAT, I TROLL MONGS.
 WHAT *ARE* EMOS? WE JUST DON'T KNOW.
 
 More nonsense at <http://meme.boxofjunk.ws>.
-
 """,
 
 "poole.css": """
@@ -305,7 +268,6 @@ class Page(dict):
     """Abstraction of a source page."""
     
     all_pages = None
-    macro_module = None
     
     _re_eom = r'^---+ *\n?$'
     _sec_macros = "macros"
@@ -366,31 +328,10 @@ class Page(dict):
         
     def __getitem__(self, key):
         
-        # in-page macro definition
         if key in self:
             return super(Page, self).__getitem__(key)
         
-        # split macro into name and arguments
-        name = key.split(None, 1)[0]
-        name = name.replace("-", "_")
-        kwargs = {}
-        for key, value in [kv.split("=", 1) for kv in key.split()[1:]]:
-            if "," in value:
-                value = [v.strip() for v in value.split(",")]
-            kwargs[str(key)] = value
-        
-        macro = getattr(self.macro_module, name, None)
-
-        # function macro in macro macro_module
-        if inspect.isfunction(macro):
-            return macro(self.all_pages, self, **kwargs)
-        
-        # string macro in macro macro_module
-        if macro is not None:
-            return str(macro)
-        
-        # macro not defined -> warning
-        print("warning: page %s uses undefined macro '%s'" % (self.fname, name))
+        print("warning: page %s uses undefined macro '%s'" % (self.fname, key))
         return ""
 
 # -----------------------------------------------------------------------------
@@ -400,28 +341,42 @@ class Page(dict):
 def build(project, opts):
     """Build a site project."""
     
-    RE_MACRO_FIND = r'(?:^|[^\\]){{ *([^}]+) *}}' # any macro
-    RE_MACRO_SUB_PATT = r'(^|[^\\]){{ *%s *}}' # specific macro
-    RE_MACRO_SUB_REPL = r'\g<1>%s'
-    RE_MACRO_X_PATT = r'\\({{ *[^}]+ *}})' # any escaped macro
-    RE_MACRO_X_REPL = r'\g<1>'
+    RE_MACRO_ANY = r'(^|[^\\])({{.+?}})' # any macro
+    RE_MACRO_ONE = r'(^|[^\\]){{ *%s *}}' # specific macro
+    RE_MACRO_ONE_REPL = r'\g<1>%s'
     
-    def expand_macro(macro, value, source):
-        """Expand macro in source to value."""
-        patt = RE_MACRO_SUB_PATT % macro
-        repl = RE_MACRO_SUB_REPL % value
+    RE_PYCODE = r'([^\\]|^)({%(?:.*?\n?)*%})' # any code block
+    
+    RE_ESCAPED = r'\\({{|{%)'
+    RE_ESCAPED_REPL = r'\1'
+    
+    def repl_code(m):
+        code = m.group(2).strip(" \n{%}")
+        dname = opj(opts.project, ".poole.tmp")
+        shutil.rmtree(dname, ignore_errors=True)
+        os.mkdir(dname)
+        fname = opj(dname, "pyblock.py")
+        with open(fname, "w") as fp:
+            fp.write("def pyblock(pages, page):\n")
+            lines = ["    %s" % l for l in code.split("\n")]
+            fp.write("\n".join(lines))
+        pyblock = imp.load_source("pyblock", fname)
+        repl = str(pyblock.pyblock(page.all_pages, page))
+        shutil.rmtree(dname)
+        return "%s%s" % (m.group(1), repl)
+    
+    def repl_macro(m):
+        if m.group(1) == "\\":
+            return m.group(2)
+        name = m.group(2).strip(" {}")
+        return "%s%s" % (m.group(1), page[name])
+        
+    def repl_specific_macro(macro, value, source):
+        """Expand one specific macro in source to value."""
+        patt = RE_MACRO_ONE % macro
+        repl = RE_MACRO_ONE_REPL % value
         return re.sub(patt, repl, source)
     
-    def expand_all_macros(source, md):
-        """Expand all macros in source using given macro dictionary."""
-        
-        macros = re.findall(RE_MACRO_FIND, source)
-        expanded = source
-        for macro in macros:
-            macro = macro.strip()
-            expanded = expand_macro(macro, md[macro], expanded)
-        return expanded
-
     dir_in = opj(project, "input")
     dir_out = opj(project, "output")
     page_html = opj(project, "page.html")
@@ -442,15 +397,6 @@ def build(project, opts):
     if not os.path.exists(dir_out):
         os.mkdir(dir_out)
     
-    # import site macros macro_module
-    sys.path.insert(0, project)
-    try:
-        import macros as site_macros_module
-    except ImportError:
-        site_macros_module = None
-    del(sys.path[0])
-    Page.macro_module = site_macros_module
-        
     # read and render pages
     pages = []
     for cwd, dirs, files in os.walk(dir_in):
@@ -478,24 +424,27 @@ def build(project, opts):
         
         print("info: processing %s" % page.fname)
         
-        # expand macros, phase 1 (macros used in page source)
-        out = expand_all_macros(page.source, page)
+        # replacements, phase 1 (macros and code blocks used in page source)
+        out = re.sub(RE_PYCODE, repl_code, page.source, re.MULTILINE)
+        out = re.sub(RE_MACRO_ANY, repl_macro, out)
+        #out = expand_all_macros(out, page)
         
         # convert to HTML
         out = markdown.Markdown().convert(out)
         
         # expand reserved macros
-        out = expand_macro(MACRO_CONTENT, out, skeleton)
-        out = expand_macro(MACRO_ENCODING, opts.output_enc, out)
+        out = repl_specific_macro(MACRO_CONTENT, out, skeleton)
+        out = repl_specific_macro(MACRO_ENCODING, opts.output_enc, out)
         
-        # expand macros, phase 2 (macros used in page.html)
-        out = expand_all_macros(out, page)
+        # replacements, phase 2 (macros and code blocks used in page.html)
+        out = re.sub(RE_PYCODE, repl_code, out, re.MULTILINE)
+        out = re.sub(RE_MACRO_ANY, repl_macro, out)
         
-        # un-escape escaped macros
-        out = re.sub(RE_MACRO_X_PATT, RE_MACRO_X_REPL, out)
-
+        # un-escape escaped stuff
+        out = re.sub(RE_ESCAPED, RE_ESCAPED_REPL, out)
+        
         # make relative links absolute
-        links = re.findall(r'(?:src|href)="([^#/][^"]*)"', out)
+        links = re.findall(r'(?:src|href)="([^#/].*?)"', out)
         for link in links:
             based = urlparse.urljoin(opts.base_url, link)
             out = out.replace('href="%s"' % link, 'href="%s"' % based)
@@ -532,21 +481,6 @@ def init(project):
 
     with open(opj(project, "page.html"), 'w') as fp:
         fp.write(PAGE_HTML)
-    
-    bims = None
-    with open(sys.argv[0], 'r') as fp:
-        lines = fp.readlines()
-    for line in lines:
-        if line.startswith("# BIM_START"):
-            bims = ""
-        elif line.startswith("# BIM_END"):
-            break
-        elif bims is not None:
-            bims += line.replace("bim_", "")
-        else:
-            pass # before BIM_START
-    with open(opj(project, "macros.py"), 'w') as fp:
-        fp.write(bims)
     
     print("success: initialized project")
 
@@ -598,8 +532,6 @@ def options():
                   help="encoding of input pages (default: utf-8)")
     og.add_option("", "--output-enc", default="utf-8", metavar="ENC",
                   help="encoding of output pages (default: utf-8)")
-    og.add_option("" , "--date-format", default="%B %d, %Y", metavar="FMT",
-                  help="how to print dates (default: '%B %d, %Y')")
     og.add_option("" , "--ignore", default=r"(^\.)|(~$)", metavar="REGEX",
                   help="input files to ignore (default: '(^\.)|(~$)')")
     op.add_option_group(og)
