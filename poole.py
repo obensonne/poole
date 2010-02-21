@@ -539,10 +539,7 @@ def options():
              "\n"
              "       Project path is optional, '.' is used as default.")
     
-    epilog = ("For possible date formats see the table at the end of "
-              "http://docs.python.org/library/datetime.html.")
-    
-    op = optparse.OptionParser(usage=usage, epilog = epilog)
+    op = optparse.OptionParser(usage=usage)
     
     op.add_option("-i" , "--init", action="store_true", default=False,
                   help="init project")
