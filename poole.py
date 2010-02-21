@@ -70,7 +70,7 @@ import markdown
 # constants
 # -----------------------------------------------------------------------------
 
-MKD_PATT = r'\.(md|mkd|mdown|markdown)$'
+MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
 
 # -----------------------------------------------------------------------------
 # example content for a new project
@@ -316,7 +316,7 @@ class Page(dict):
         basename = os.path.basename(fname)
         
         fpatt = r'(.+?)(?:\.([0-9]+-[0-9]+-[0-9]+)(?:\.(.*))?)?%s' % MKD_PATT
-        title, date, post, ext = re.match(fpatt, basename).groups()
+        title, date, post = re.match(fpatt, basename).groups()
         title = title.replace("_", " ")
         post = post and post.replace("_", " ") or None
         self["title"] = self.get("title", title)
