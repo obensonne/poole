@@ -271,6 +271,7 @@ class Page(dict):
     
     _re_eom = r'^---+ *\n?$'
     _sec_macros = "macros"
+    _modmacs = None
     
     def __init__(self, fname, strip, opts):
         """Create a new page.
@@ -331,9 +332,22 @@ class Page(dict):
         if key in self:
             return super(Page, self).__getitem__(key)
         
+        if self._modmacs is None:
+            self._load_modmacs()
+        if hasattr(self._modmacs, key):
+            return getattr(self._modmacs, key)
+        
         print("warning: page %s uses undefined macro '%s'" % (self.fname, key))
         return ""
-
+    
+    def _load_modmacs(self):
+        fname = opj(self.opts.project, "macros.py")
+        if os.path.exists(fname):
+            Page._modmacs = imp.load_source("macros", fname)
+            print "loaded"
+        else:
+            Page._modmacs = object()
+            
 # -----------------------------------------------------------------------------
 # build site
 # -----------------------------------------------------------------------------
