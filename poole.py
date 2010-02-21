@@ -360,6 +360,7 @@ def build(project, opts):
     RE_ESCAPED_REPL = r'\1'
     
     def repl_code(m):
+        """Replacement callback for re.sub()."""
         code = m.group(2).strip("\n{%}")
         dname = opj(opts.project, ".poole.tmp")
         shutil.rmtree(dname, ignore_errors=True)
@@ -376,6 +377,7 @@ def build(project, opts):
         return "%s%s" % (m.group(1), repl)
     
     def repl_macro(m):
+        """Replacement callback for re.sub()."""
         if m.group(1) == "\\":
             return m.group(2)
         name = m.group(2).strip(" {}")
