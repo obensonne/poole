@@ -425,8 +425,8 @@ def build(project, opts):
         print("info: processing %s" % page.fname)
         
         # replacements, phase 1 (macros and code blocks used in page source)
-        out = re.sub(RE_PYCODE, repl_code, page.source, re.MULTILINE)
-        out = re.sub(RE_MACRO_ANY, repl_macro, out)
+        out = re.sub(RE_MACRO_ANY, repl_macro, page.source)
+        out = re.sub(RE_PYCODE, repl_code, out, re.MULTILINE)
         #out = expand_all_macros(out, page)
         
         # convert to HTML
@@ -437,8 +437,8 @@ def build(project, opts):
         out = repl_specific_macro(MACRO_ENCODING, opts.output_enc, out)
         
         # replacements, phase 2 (macros and code blocks used in page.html)
-        out = re.sub(RE_PYCODE, repl_code, out, re.MULTILINE)
         out = re.sub(RE_MACRO_ANY, repl_macro, out)
+        out = re.sub(RE_PYCODE, repl_code, out, re.MULTILINE)
         
         # un-escape escaped stuff
         out = re.sub(RE_ESCAPED, RE_ESCAPED_REPL, out)
