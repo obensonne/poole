@@ -26,9 +26,7 @@ from __future__ import with_statement
 
 import codecs
 from ConfigParser import SafeConfigParser
-from datetime import datetime
 import glob
-import inspect
 import imp
 import optparse
 import os
@@ -44,27 +42,6 @@ from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 
 import markdown
-
-
-#_POST_HEADER_TMPL = """<div class="post-header">
-#<h2 class="post-header-title">%s</h2>
-#<p class="post-header-date">%s</p>
-#<p class="post-header-summary">%s</p>
-#</div>
-#"""
-#
-#def bim_post_header(pages, page):
-#
-#    if not page["post"]:
-#        print("error: page %s uses macro `post-header` but it's filename "
-#              "does not match a post filename")
-#        sys.exit(1)
-#    
-#    title = page["post"]
-#    date = _post_date(page)
-#    summary = page["summary"]
-#    
-#    return _POST_HEADER_TMPL % (title, date, summary)
 
 # -----------------------------------------------------------------------------
 # constants
