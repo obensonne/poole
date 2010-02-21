@@ -351,7 +351,7 @@ def build(project, opts):
     RE_ESCAPED_REPL = r'\1'
     
     def repl_code(m):
-        code = m.group(2).strip(" \n{%}")
+        code = m.group(2).strip("\n{%}")
         dname = opj(opts.project, ".poole.tmp")
         shutil.rmtree(dname, ignore_errors=True)
         os.mkdir(dname)
