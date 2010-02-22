@@ -56,17 +56,17 @@ MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
 PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
-    <title>poole - {{ title }}</title>
-    <meta name="description" content="{{ description }}" />
-    <meta name="keywords" content="{{ keywords }}" />
+    <meta http-equiv="Content-Type" content="text/html; charset={% __encoding__ %}" />
+    <title>poole - {% title %}</title>
+    <meta name="description" content="{% description %}" />
+    <meta name="keywords" content="{% keywords %}" />
     <link rel="stylesheet" type="text/css" href="poole.css" />
 </head>
 <body>
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{{ title }}</h2>
+         <h2>{% title %}</h2>
     </div>
     <div id="menu">
 {%
@@ -79,7 +79,7 @@ for p in mpages:
     print '<span%s>%s</span>' % (style, link)
 %}
     </div>
-    <div id="content">{{ __content__ }}</div>
+    <div id="content">{% __content__ %}</div>
     </div>
     <div id="footer">
         Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a> &middot;
@@ -167,7 +167,7 @@ on small sites where we want to get things done fast and pragmatically.*
 "blog.2010-02-01.Doctors_in_my_penguin.md" : """
 summary: There is a bank in my eel, your argument is invalid.
 ---
-## {{ post }}
+## {% post %}
 
 Posted at
 {%
@@ -175,7 +175,7 @@ from datetime import datetime
 return datetime.strptime(page["date"], "%Y-%m-%d").strftime("%B %d, %Y")
 %}
 
-*{{ summary }}*
+*{% summary %}*
 
 THE MOVIE INDUSTRY? IN *MY* MACBOOK?
 JESUS CHRIST IT'S A BABBY GET IN THE HERO!
@@ -338,18 +338,22 @@ except ImportError:
 def build(project, opts):
     """Build a site project."""
     
-    RE_VAR_ANY = r'(^|[^\\])({{.+?}})' # any variable reference
-    RE_VAR_ONE = r'(^|[^\\]){{ *%s *}}' # specific variable reference
-    RE_VAR_ONE_REPL = r'\g<1>%s'# replacement for a specific variable reference
+    rx_pis = re.compile(r'(?<!\\)(?:(?:<!--|{)%)((?:.*?\n?)*)(?:%(?:-->|}))')
+    rx_esc = re.compile(r'\\(<!--|{)') # escaped PI section
+    rp_esc = r'\1'
+    rx_var = re.compile(r' *([\w-]+) *') # variable in PI section
+    rx_rel = re.compile(r'(?<=(?:(?:\n| )src|href)=")([^#/].*?)(?=")') # relative link
     
-    RE_PYCODE = r'([^\\]|^)({%(?:.*?\n?)*%})' # any code block
-    
-    RE_ESCAPED = r'\\({{|{%)' # escaped code block or variable reference
-    RE_ESCAPED_REPL = r'\1' # unescaped
-    
-    def repl_code(m):
+    def repl(m):
         """Replacement callback for re.sub()."""
-        code = m.group(2).strip("\n{%}")
+        content = m.group(1)
+        
+        # variable
+        vr = rx_var.match(content)
+        if vr:
+            return page[vr.group(1)]
+        
+        # instructions
         dname = opj(opts.project, ".build")
         shutil.rmtree(dname, ignore_errors=True)
         os.mkdir(dname)
@@ -357,7 +361,7 @@ def build(project, opts):
         with open(fname, "w") as fp:
             fp.write(PYCODE_HEADER % opts.project)
             fp.write("def execute(pages, page):\n")
-            lines = ["    %s" % l for l in code.split("\n")] # indent lines
+            lines = ["    %s" % l for l in content.split("\n")] # indent lines
             fp.write("\n".join(lines))
         pycode = imp.load_source("pycode", fname)
         stdout = sys.stdout
@@ -366,20 +370,11 @@ def build(project, opts):
         repl = sys.stdout.getvalue()[:-1] # remove last line break
         sys.stdout = stdout
         shutil.rmtree(dname)
-        return "%s%s" % (m.group(1), repl)
+        return repl
     
-    def repl_var(m):
-        """Replacement callback for re.sub()."""
-        if m.group(1) == "\\":
-            return m.group(2)
-        name = m.group(2).strip(" {}")
-        return "%s%s" % (m.group(1), page[name])
-        
-    def repl_specific_variable(name, value, source):
-        """Expand one specific variable in source to value."""
-        patt = RE_VAR_ONE % name
-        repl = RE_VAR_ONE_REPL % value
-        return re.sub(patt, repl, source)
+    def repl_link(m):
+        return urlparse.urljoin(opts.base_url, m.group(1))
+
     
     dir_in = opj(project, "input")
     dir_out = opj(project, "output")
@@ -429,29 +424,22 @@ def build(project, opts):
         print("info: processing %s" % page.fname)
         
         # replacements, phase 1 (variables and code blocks used in page source)
-        out = re.sub(RE_VAR_ANY, repl_var, page.source)
-        out = re.sub(RE_PYCODE, repl_code, out, re.MULTILINE)
+        out = rx_pis.sub(repl, page.source)
         
         # convert to HTML
         out = markdown.Markdown().convert(out)
         
-        # expand reserved variables
-        out = repl_specific_variable("__content__", out, skeleton)
-        out = repl_specific_variable("__encoding__", opts.output_enc, out)
-        
         # replacements, phase 2 (variables and code blocks used in page.html)
-        out = re.sub(RE_VAR_ANY, repl_var, out)
-        out = re.sub(RE_PYCODE, repl_code, out, re.MULTILINE)
+        page["__content__"] = out
+        page["__ecnoding__"] = opts.output_enc
+        out = rx_pis.sub(repl, skeleton)
         
         # un-escape escaped stuff
-        out = re.sub(RE_ESCAPED, RE_ESCAPED_REPL, out)
+        out = rx_esc.sub(rp_esc, out)
         
         # make relative links absolute
-        links = re.findall(r'(?:src|href)="([^#/].*?)"', out)
-        for link in links:
-            based = urlparse.urljoin(opts.base_url, link)
-            out = out.replace('href="%s"' % link, 'href="%s"' % based)
-            out = out.replace('src="%s"' % link, 'src="%s"' % based)
+        abslink = lambda m: urlparse.urljoin(opts.base_url, m.group(1))
+        out = rx_rel.sub(abslink, out)
         
         # write HTML page
         fname = page.fname.replace(dir_in, dir_out)
