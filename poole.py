@@ -32,6 +32,7 @@ import optparse
 import os
 import os.path
 from os.path import join as opj
+from os.path import exists as opx
 import re
 import shutil
 import StringIO
@@ -172,7 +173,7 @@ summary: There is a bank in my eel, your argument is invalid.
 Posted at
 {%
 from datetime import datetime
-return datetime.strptime(page["date"], "%Y-%m-%d").strftime("%B %d, %Y")
+print datetime.strptime(page["date"], "%Y-%m-%d").strftime("%B %d, %Y")
 %}
 
 *{% summary %}*
@@ -306,34 +307,15 @@ class Page(dict):
         if key in self:
             return super(Page, self).__getitem__(key)
         
-        if self._modmacs is None:
-            self._load_modmacs()
-        if hasattr(self._modmacs, key):
-            return getattr(self._modmacs, key)
+        if key in self.opts.macros:
+            return self.opts.macros[key]
         
         print("warning: page %s uses undefined macro '%s'" % (self.fname, key))
         return ""
-    
-    def _load_modmacs(self):
-        fname = opj(self.opts.project, "macros.py")
-        if os.path.exists(fname):
-            Page._modmacs = imp.load_source("macros", fname)
-            print "loaded"
-        else:
-            Page._modmacs = object()
-            
+
 # -----------------------------------------------------------------------------
 # build site
 # -----------------------------------------------------------------------------
-
-PYCODE_HEADER="""
-import sys
-sys.path.insert(0, "%s")
-try:
-    from macros import *
-except ImportError:
-    pass
-"""
 
 def build(project, opts):
     """Build a site project."""
@@ -341,40 +323,49 @@ def build(project, opts):
     rx_pis = re.compile(r'(?<!\\)(?:(?:<!--|{)%)((?:.*?\n?)*)(?:%(?:-->|}))')
     rx_esc = re.compile(r'\\(<!--|{)') # escaped PI section
     rp_esc = r'\1'
-    rx_var = re.compile(r' *([\w-]+) *') # variable in PI section
+    rx_var = re.compile(r'^ *([\w-]+) *$') # variable in PI section
     rx_rel = re.compile(r'(?<=(?:(?:\n| )src|href)=")([^#/].*?)(?=")') # relative link
     
     def repl(m):
         """Replacement callback for re.sub()."""
         content = m.group(1)
         
-        # variable
+        ### variable ###
         vr = rx_var.match(content)
         if vr:
             return page[vr.group(1)]
         
-        # instructions
-        dname = opj(opts.project, ".build")
-        shutil.rmtree(dname, ignore_errors=True)
-        os.mkdir(dname)
-        fname = opj(dname, "pycode.py")
-        with open(fname, "w") as fp:
-            fp.write(PYCODE_HEADER % opts.project)
-            fp.write("def execute(pages, page):\n")
-            lines = ["    %s" % l for l in content.split("\n")] # indent lines
-            fp.write("\n".join(lines))
-        pycode = imp.load_source("pycode", fname)
+        ### instructions ###
+        
+        # base indentation
+        ind_lvl = len(re.findall(r'^(?: *\n)*( *)', content, re.MULTILINE)[0])
+        ind_rex = re.compile(r'^ {0,%d}' % ind_lvl, re.MULTILINE)
+        content = ind_rex.sub('', content)
+        
+        # set execution environment
+        exenv = opts.macros.copy()
+        exenv.update({"pages": pages, "page": page})
+        
+        # execute
         stdout = sys.stdout
         sys.stdout = StringIO.StringIO()
-        pycode.execute(page.all_pages, page)
+        err = None
+        try:
+            exec content in exenv
+        except Exception, e:
+            err = e
         repl = sys.stdout.getvalue()[:-1] # remove last line break
         sys.stdout = stdout
-        shutil.rmtree(dname)
+        if err:
+            print((" bad code in %s " % page.fname).center(79, "-"))
+            print(content)
+            print(" exception ".center(79, "-"))
+            raise(err)
+        
         return repl
     
     def repl_link(m):
         return urlparse.urljoin(opts.base_url, m.group(1))
-
     
     dir_in = opj(project, "input")
     dir_out = opj(project, "output")
@@ -382,7 +373,7 @@ def build(project, opts):
 
     # check required files and folders
     for pelem in (page_html, dir_in, dir_out):
-        if not os.path.exists(pelem):
+        if not opx(pelem):
             print("error: %s does not exist, looks like project has not been "
                   "initialized, abort" % pelem)
             sys.exit(1)
@@ -393,7 +384,7 @@ def build(project, opts):
             shutil.rmtree(fod)
         else:
             os.remove(fod)
-    if not os.path.exists(dir_out):
+    if not opx(dir_out):
         os.mkdir(dir_out)
     
     # read and render pages
@@ -431,7 +422,7 @@ def build(project, opts):
         
         # replacements, phase 2 (variables and code blocks used in page.html)
         page["__content__"] = out
-        page["__ecnoding__"] = opts.output_enc
+        page["__encoding__"] = opts.output_enc
         out = rx_pis.sub(repl, skeleton)
         
         # un-escape escaped stuff
@@ -456,7 +447,7 @@ def build(project, opts):
 def init(project):
     """Initialize a site project."""
     
-    if not os.path.exists(project):
+    if not opx(project):
         os.makedirs(project)
         
     if os.listdir(project):
@@ -537,6 +528,14 @@ def options():
         op.exit()
     
     opts.project = args and args[0] or "."
+    
+    # macro module (not an option, but here it is available globally)
+    fname = opj(opts.project, "macros.py")
+    macmod = opx(fname) and imp.load_source("macros", fname) or None
+    opts.macros = {}
+    for attr in dir(macmod):
+        if not attr.startswith("_"):
+            opts.macros[attr] = getattr(macmod, attr)
     
     return opts
     
