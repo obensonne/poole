@@ -70,7 +70,7 @@ PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://
          <h2>{% title %}</h2>
     </div>
     <div id="menu">
-{%
+<!--%
 mpages = [p for p in pages if "menu-position" in p]
 mpages.sort(key=lambda p: int(p["menu-position"]))
 
@@ -78,14 +78,16 @@ for p in mpages:
     style = p["title"] == page["title"] and ' class="current"' or ''
     link = '<a href="%s">%s</a>' % (p["url"], p["title"])
     print '<span%s>%s</span>' % (style, link)
-%}
+%-->
     </div>
     <div id="content">{% __content__ %}</div>
     </div>
     <div id="footer">
-        Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a> &middot;
-        Licensed as <a href="http://creativecommons.org/licenses/by-sa/3.0">CC-by-SA</a> &middot;
-        <a href="http://validator.w3.org/check?uri=referer">Validate me.</a>
+        Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>
+        &middot;
+        Licensed as <a href="http://creativecommons.org/licenses/by-sa/3.0">CC-SA</a>
+        &middot;
+        <a href="http://validator.w3.org/check?uri=referer">Validate me</a>
     </div>
 </body>
 </html>
