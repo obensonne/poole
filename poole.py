@@ -28,6 +28,7 @@ import codecs
 from ConfigParser import SafeConfigParser
 import glob
 import imp
+import inspect
 import optparse
 import os
 import os.path
@@ -37,6 +38,7 @@ import re
 import shutil
 import StringIO
 import sys
+import traceback
 import urlparse
 
 from SimpleHTTPServer import SimpleHTTPRequestHandler
@@ -44,30 +46,30 @@ from BaseHTTPServer import HTTPServer
 
 import markdown
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # constants
-# -----------------------------------------------------------------------------
+# =============================================================================
 
 MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # example content for a new project
-# -----------------------------------------------------------------------------
+# =============================================================================
 
 PAGE_HTML = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset={% __encoding__ %}" />
-    <title>poole - {% title %}</title>
-    <meta name="description" content="{% description %}" />
-    <meta name="keywords" content="{% keywords %}" />
+    <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
+    <title>poole - {{ page.title }}</title>
+    <meta name="description" content="{{ page.description or 'a poole site' }}" />
+    <meta name="keywords" content="{{ page.keywords or 'poole'  }}" />
     <link rel="stylesheet" type="text/css" href="poole.css" />
 </head>
 <body>
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{% title %}</h2>
+         <h2>{{ page.title }}</h2>
     </div>
     <div id="menu">
 <!--%
@@ -80,7 +82,7 @@ for p in mpages:
     print '<span%s>%s</span>' % (style, link)
 %-->
     </div>
-    <div id="content">{% __content__ %}</div>
+    <div id="content">{{ __content__ }}</div>
     </div>
     <div id="footer">
         Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>
@@ -170,15 +172,15 @@ on small sites where we want to get things done fast and pragmatically.*
 "blog.2010-02-01.Doctors_in_my_penguin.md" : """
 summary: There is a bank in my eel, your argument is invalid.
 ---
-## {% post %}
+## {{ page.post }}
 
 Posted at
-{%
+<!--%
 from datetime import datetime
 print datetime.strptime(page["date"], "%Y-%m-%d").strftime("%B %d, %Y")
-%}
+%-->
 
-*{% summary %}*
+*{{ page.summary }}*
 
 THE MOVIE INDUSTRY? IN *MY* MACBOOK?
 JESUS CHRIST IT'S A BABBY GET IN THE HERO!
@@ -187,6 +189,10 @@ DISREGARD THAT, I TROLL MONGS.
 WHAT *ARE* EMOS? WE JUST DON'T KNOW.
 
 More nonsense at <http://meme.boxofjunk.ws>.
+
+{{ 4 + 4 }}
+
+<!--{ 2 }-->
 """,
 
 "poole.css": """
@@ -237,9 +243,9 @@ pre {
 """
 }
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # page class
-# -----------------------------------------------------------------------------
+# =============================================================================
 
 class Page(dict):
     """Abstraction of a source page."""
@@ -260,13 +266,13 @@ class Page(dict):
         """
         super(Page, self).__init__()
         
+        self.update(opts.macros.get("page", {}))
+        
         self["url"] = re.sub(MKD_PATT, ".html", fname)
         self["url"] = self["url"][len(strip):].lstrip(os.path.sep)
         self["url"] = self["url"].replace(os.path.sep, "/")
         
         self.fname = fname
-        
-        self.opts = opts
         
         with codecs.open(fname, 'r', opts.input_enc) as fp:
             self.raw = fp.readlines()
@@ -302,72 +308,97 @@ class Page(dict):
         self["title"] = self.get("title", title)
         self["date"] = self.get("date", date)
         self["post"] = self.get("post", post)
-        # if page is a blog post, set post to it's date
         
     def __getitem__(self, key):
-        
+
         if key in self:
             return super(Page, self).__getitem__(key)
         
-        if key in self.opts.macros:
-            return self.opts.macros[key]
-        
-        print("warning: page %s uses undefined macro '%s'" % (self.fname, key))
+        print("warning: variable '%s' is undefined in %s -> "
+              "fall back to empty string" % (key, self.fname))
         return ""
-
-# -----------------------------------------------------------------------------
+    
+    def __getattribute__(self, name):
+        
+        try:
+            return super(Page, self).__getattribute__(name)
+        except AttributeError:
+            return self[name]
+        
+# =============================================================================
 # build site
-# -----------------------------------------------------------------------------
+# =============================================================================
 
 def build(project, opts):
     """Build a site project."""
     
-    rx_pis = re.compile(r'(?<!\\)(?:(?:<!--|{)%)((?:.*?\n?)*)(?:%(?:-->|}))')
-    rx_esc = re.compile(r'\\(<!--|{)') # escaped PI section
-    rp_esc = r'\1'
-    rx_var = re.compile(r'^ *([\w-]+) *$') # variable in PI section
-    rx_rel = re.compile(r'(?<=(?:(?:\n| )src|href)=")([^#/].*?)(?=")') # relative link
+    # -------------------------------------------------------------------------
+    # utilities
+    # -------------------------------------------------------------------------
+
+    def abort_iex(page, itype, inline, exc):
+        """Abort because of an exception in inlined Python code."""
+        print("error  : Python %s in %s failed" % (itype, page.fname))
+        print((" %s raising the exception " % itype).center(79, "-"))
+        print(inline)
+        print(" exception ".center(79, "-"))
+        print(exc)
+        sys.exit(1)
+        
+    # -------------------------------------------------------------------------
+    # regex patterns and replacements
+    # -------------------------------------------------------------------------
     
-    def repl(m):
+    regx_escp = re.compile(r'\\((?:<!--|{)(?:{|%))') # escaped PI section
+    repl_escp = r'\1'
+    regx_rurl = re.compile(r'(?<=(?:(?:\n| )src|href)=")([^#/].*?)(?=")')
+    repl_rurl = lambda m: urlparse.urljoin(opts.base_url, m.group(1))
+    
+    regx_eval = re.compile(r'(?<!\\)(?:(?:<!--|{){)((?:.*?\n?)*)(?:}(?:-->|}))')
+
+    def repl_eval(m):
         """Replacement callback for re.sub()."""
-        content = m.group(1)
-        
-        ### variable ###
-        vr = rx_var.match(content)
-        if vr:
-            return page[vr.group(1)]
-        
-        ### instructions ###
+        expr = m.group(1)
+        env = opts.macros.copy()
+        env.update({"pages": pages, "page": page})
+        try:
+            return str(eval(expr, env))
+        except:
+            abort_iex(page, "expression", expr, traceback.format_exc())
+
+    regx_exec = re.compile(r'(?<!\\)(?:(?:<!--|{)%)((?:.*?\n?)*)(?:%(?:-->|}))')
+    
+    def repl_exec(m):
+        """Replacement callback for re.sub()."""
+        stmt = m.group(1)
         
         # base indentation
-        ind_lvl = len(re.findall(r'^(?: *\n)*( *)', content, re.MULTILINE)[0])
+        ind_lvl = len(re.findall(r'^(?: *\n)*( *)', stmt, re.MULTILINE)[0])
         ind_rex = re.compile(r'^ {0,%d}' % ind_lvl, re.MULTILINE)
-        content = ind_rex.sub('', content)
+        stmt = ind_rex.sub('', stmt)
         
         # set execution environment
-        exenv = opts.macros.copy()
-        exenv.update({"pages": pages, "page": page})
+        env = opts.macros.copy()
+        env.update({"pages": pages, "page": page})
         
         # execute
-        stdout = sys.stdout
         sys.stdout = StringIO.StringIO()
-        err = None
         try:
-            exec content in exenv
-        except Exception, e:
-            err = e
-        repl = sys.stdout.getvalue()[:-1] # remove last line break
-        sys.stdout = stdout
-        if err:
-            print((" bad code in %s " % page.fname).center(79, "-"))
-            print(content)
-            print(" exception ".center(79, "-"))
-            raise(err)
-        
-        return repl
+            exec stmt in env
+        except:
+            sys.stdout = sys.__stdout__ 
+            abort_iex(page, "statements", stmt, traceback.format_exc())
+        else:
+            repl = sys.stdout.getvalue()[:-1] # remove last line break
+            sys.stdout = sys.__stdout__ 
+            return repl
     
     def repl_link(m):
         return urlparse.urljoin(opts.base_url, m.group(1))
+    
+    # -------------------------------------------------------------------------
+    # preparations
+    # -------------------------------------------------------------------------
     
     dir_in = opj(project, "input")
     dir_out = opj(project, "output")
@@ -376,11 +407,11 @@ def build(project, opts):
     # check required files and folders
     for pelem in (page_html, dir_in, dir_out):
         if not opx(pelem):
-            print("error: %s does not exist, looks like project has not been "
+            print("error  : %s does not exist, looks like project has not been "
                   "initialized, abort" % pelem)
             sys.exit(1)
 
-    # prepare output dir
+    # prepare output directory
     for fod in glob.glob(opj(dir_out, "*")):
         if os.path.isdir(fod):
             shutil.rmtree(fod)
@@ -389,7 +420,10 @@ def build(project, opts):
     if not opx(dir_out):
         os.mkdir(dir_out)
     
-    # read and render pages
+    # -------------------------------------------------------------------------
+    # collect input date
+    # -------------------------------------------------------------------------
+    
     pages = []
     for cwd, dirs, files in os.walk(dir_in):
         cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
@@ -405,34 +439,34 @@ def build(project, opts):
             else:
                 shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
 
-    # make list of all pages available in page objects
-    Page.all_pages = pages
-   
-    # read page skeleton
+    # -------------------------------------------------------------------------
+    # convert pages
+    # -------------------------------------------------------------------------
+    
     with codecs.open(opj(project, "page.html"), 'r', opts.input_enc) as fp:
         skeleton = fp.read()
     
     for page in pages:
         
-        print("info: processing %s" % page.fname)
+        print("info   : processing %s" % page.fname)
         
-        # replacements, phase 1 (variables and code blocks used in page source)
-        out = rx_pis.sub(repl, page.source)
+        # replacements, phase 1 (expressions and statements in page source)
+        out = regx_eval.sub(repl_eval, page.source)
+        out = regx_exec.sub(repl_exec, out)
         
         # convert to HTML
         out = markdown.Markdown().convert(out)
         
         # replacements, phase 2 (variables and code blocks used in page.html)
-        page["__content__"] = out
-        page["__encoding__"] = opts.output_enc
-        out = rx_pis.sub(repl, skeleton)
+        opts.macros["__content__"] = out
+        out = regx_eval.sub(repl_eval, skeleton)
+        out = regx_exec.sub(repl_exec, out)
         
         # un-escape escaped stuff
-        out = rx_esc.sub(rp_esc, out)
+        out = regx_escp.sub(repl_escp, out)
         
         # make relative links absolute
-        abslink = lambda m: urlparse.urljoin(opts.base_url, m.group(1))
-        out = rx_rel.sub(abslink, out)
+        out = regx_rurl.sub(repl_rurl, out)
         
         # write HTML page
         fname = page.fname.replace(dir_in, dir_out)
@@ -442,9 +476,9 @@ def build(project, opts):
 
     print("success: built project")
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # init site
-# -----------------------------------------------------------------------------
+# =============================================================================
 
 def init(project):
     """Initialize a site project."""
@@ -453,7 +487,7 @@ def init(project):
         os.makedirs(project)
         
     if os.listdir(project):
-        print("error: project dir %s is not empty, abort" % project)
+        print("error  : project dir %s is not empty, abort" % project)
         sys.exit(1)
     
     os.mkdir(opj(project, "input"))
@@ -468,25 +502,25 @@ def init(project):
     
     print("success: initialized project")
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # serve site
-# -----------------------------------------------------------------------------
+# =============================================================================
 
 def serve(project, port):
     """Temporary serve a site project."""
     
     root = opj(project, "output")
     if not os.listdir(project):
-        print("error: output dir is empty (build project first!), abort")
+        print("error  : output dir is empty (build project first!), abort")
         sys.exit(1)
     
     os.chdir(root)
     server = HTTPServer(('', port), SimpleHTTPRequestHandler)
     server.serve_forever()
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # options
-# -----------------------------------------------------------------------------
+# =============================================================================
 
 def options():
     """Parse and validate command line arguments."""
@@ -534,16 +568,16 @@ def options():
     # macro module (not an option, but here it is available globally)
     fname = opj(opts.project, "macros.py")
     macmod = opx(fname) and imp.load_source("macros", fname) or None
-    opts.macros = {}
+    opts.macros = {"__encoding__": opts.output_enc}
     for attr in dir(macmod):
         if not attr.startswith("_"):
             opts.macros[attr] = getattr(macmod, attr)
     
     return opts
     
-# -----------------------------------------------------------------------------
+# =============================================================================
 # main
-# -----------------------------------------------------------------------------
+# =============================================================================
 
 def main():
     
