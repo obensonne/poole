@@ -474,8 +474,8 @@ def build(project, opts):
             os.remove(fod)
     if not opx(dir_out):
         os.mkdir(dir_out)
-    
-    # macro module (not an option, but here it is available globally)
+
+    # macro module
     fname = opj(opts.project, "macros.py")
     print fname, opx(fname)
     macros = {"__encoding__": opts.output_enc}
