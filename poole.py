@@ -389,7 +389,7 @@ def build(project, opts):
     # regex patterns and replacements
     # -------------------------------------------------------------------------
     
-    regx_escp = re.compile(r'\\((?:<!--|{)(?:{|%))') # escaped PI section
+    regx_escp = re.compile(r'\\((?:(?:&lt;|<)!--|{)(?:{|%))') # escaped code
     repl_escp = r'\1'
     regx_rurl = re.compile(r'(?<=(?:(?:\n| )src|href)=")([^#/].*?)(?=")')
     repl_rurl = lambda m: urlparse.urljoin(opts.base_url, m.group(1))
@@ -509,7 +509,7 @@ def build(project, opts):
         out = regx_eval.sub(repl_eval, skeleton)
         out = regx_exec.sub(repl_exec, out)
         
-        # un-escape escaped stuff
+        # un-escape escaped python code blocks
         out = regx_escp.sub(repl_escp, out)
         
         # make relative links absolute
