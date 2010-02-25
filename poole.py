@@ -157,7 +157,7 @@ That said, Poole allows you do basic content generation by inlining Python
 code in your markdown pages. That's everything but MVC, but for simple site it
 may be just the thing you need. For instance the menu above has been created by
 some Python code within the project's `page.html` file, the one and only HTML
-template for every page of your site. [Read more ...](python.html) 
+template for every page of your site. [Read more ...](python.html)
 
 [md]: http://daringfireball.net/projects/markdown/
 """,
@@ -444,11 +444,11 @@ def build(project, opts):
         try:
             exec stmt in macros
         except:
-            sys.stdout = sys.__stdout__ 
+            sys.stdout = sys.__stdout__
             abort_iex(page, "statements", stmt, traceback.format_exc())
         else:
             repl = sys.stdout.getvalue()[:-1] # remove last line break
-            sys.stdout = sys.__stdout__ 
+            sys.stdout = sys.__stdout__
             return repl
     
     # -------------------------------------------------------------------------
@@ -539,7 +539,7 @@ def build(project, opts):
         
         # write HTML page
         fname = page.fname.replace(dir_in, dir_out)
-        fname = re.sub(MKD_PATT, ".html", fname) 
+        fname = re.sub(MKD_PATT, ".html", fname)
         with codecs.open(fname, 'w', opts.output_enc) as fp:
             fp.write(out)
 
