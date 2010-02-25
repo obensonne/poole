@@ -74,16 +74,16 @@ EXAMPLE_FILES =  {
          <h2>{{ page.title }}</h2>
     </div>
     <div id="menu">
-<!--%
-mpages = [p for p in pages if "menu-position" in p]
-mpages.sort(key=lambda p: int(p["menu-position"]))
-
-html = '<span class="{style}"><a href="{link}">{name}</a></span>'
-
-for p in mpages:
-    style = p["title"] == page["title"] and "current" or ""
-    print html.format(style=style, link=p.url, name=p.title)
-%-->
+    <!--%
+        mpages = [p for p in pages if "menu-position" in p]
+        mpages.sort(key=lambda p: int(p["menu-position"]))
+        
+        html = '<span class="{style}"><a href="{link}">{name}</a></span>'
+        
+        for p in mpages:
+            style = p["title"] == page["title"] and "current" or ""
+            print html.format(style=style, link=p.url, name=p.title)
+    %-->
     </div>
     <div id="content">{{ __content__ }}</div>
     </div>
@@ -98,12 +98,22 @@ for p in mpages:
 </html>
 """,
 
-"macros.py": """
+"macros.py": """# -----------------------------------------------------------------------------
+# Every public attribute (variable, function, ...) defined here will be
+# available when processing Python code inlined in a source page.
+# -----------------------------------------------------------------------------
+
+# a list of all pages in the project, updated during runtime
 pages = []
+
+# template for a page dictionary, updated during runtime
 page = {
     "description": "a poole site",
     "keywords": "poole",
 }
+
+# -----------------------------------------------------------------------------
+
 """,
 
 # -----------------------------------------------------------------------------
@@ -118,6 +128,23 @@ menu-position: 0
 In Poole you write your pages in [markdown][md]. It's easier to write
 markdown than HTML.
 
+Poole is made for simple websites you just want to get done, without installing
+a bunch of requirements and without learning a template engine.
+
+That said, Poole allows you do basic content generation by inlining Python
+code in your markdown pages. That's everything but MVC, but for simple site it
+may be just the thing you need. For instance the menu above has been created by
+some Python code within the project's `page.html` file, the one and only HTML
+template for every page of your site. [Read more ...](python.html) 
+
+[md]: http://daringfireball.net/projects/markdown/
+""",
+
+# -----------------------------------------------------------------------------
+
+opj("input", "python.md"): """
+menu-position: 4
+---
 Poole sites by default have a navigation menu, like the one above. It contains
 all pages having the *menu-position* variable defined, for instance like this:
 
@@ -129,7 +156,6 @@ all pages having the *menu-position* variable defined, for instance like this:
 This page's file name is `index` but the name shown above is **home**.
 That's because this page has the *title* variable defined to `home`.
 
-[md]: http://daringfireball.net/projects/markdown/
 """,
 
 # -----------------------------------------------------------------------------
@@ -288,8 +314,6 @@ class Page(dict):
         super(Page, self).__init__()
         
         self.update(templ)
-        
-        print self
         
         self["url"] = re.sub(MKD_PATT, ".html", fname)
         self["url"] = self["url"][len(strip):].lstrip(os.path.sep)
