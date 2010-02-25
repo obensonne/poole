@@ -26,6 +26,7 @@ from __future__ import with_statement
 
 import codecs
 from ConfigParser import SafeConfigParser
+from datetime import datetime
 import glob
 import imp
 import optparse
@@ -50,6 +51,21 @@ import markdown
 # =============================================================================
 
 MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
+
+SITEMAP_TMPL = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{urls}
+</urlset>
+"""
+
+SITEMAP_URL_TMPL = """
+<url>
+    <loc>{base}{url}</loc>
+    <lastmod>{date}</lastmod>
+    <changefreq>{changefreq}</changefreq>
+    <priority>{priority}</priority>
+</url>
+"""
 
 # =============================================================================
 # example content for a new project
@@ -98,20 +114,27 @@ EXAMPLE_FILES =  {
 """,
 
 "macros.py": """# -----------------------------------------------------------------------------
-# Every public attribute (variable, function, ...) defined here will be
+# Every public attribute defined here (variable, function, ...) will be
 # available when processing Python code inlined in a source page.
 # -----------------------------------------------------------------------------
 
-# a list of all pages in the project, updated during runtime
+# all pages in the project, updated during runtime
 pages = []
 
-# template for a page dictionary, updated during runtime
+# some defaults for page variables, updated during runtime, feel free to edit
 page = {
-    "description": "a poole site",
-    "keywords": "poole",
+    "description": "a poole site", # used in page.html
+    "keywords": "poole", # used in page.html
+    "priority": "0.8", # used by sitemap generator
+    "changefreq": "monthly" # used by sitemap generator
+    # the following page variables are always available:
+    # url: relative page url
+    # title: page title (derived from file name if not set)
 }
 
 # -----------------------------------------------------------------------------
+
+# put your own stuff here
 
 """,
 
@@ -520,6 +543,22 @@ def build(project, opts):
         with codecs.open(fname, 'w', opts.output_enc) as fp:
             fp.write(out)
 
+    # -------------------------------------------------------------------------
+    # sitemap
+    # -------------------------------------------------------------------------
+
+    urls = []
+    date = datetime.strftime(datetime.now(), "%Y-%m-%d")
+    for p in pages:
+        url = SITEMAP_URL_TMPL.format(base=opts.base_url, url=p.url, date=date,
+                                      changefreq=p.get("changefreq", "monthly"),
+                                      priority=p.get("priority", "0.8"))
+        urls.append(url)
+
+    if opts.sitemap:
+        with open(opj(opts.project, "output", "sitemap.xml"), "w") as fp:
+            fp.write(SITEMAP_TMPL.format(urls="".join(urls)))
+
     print("success: built project")
 
 # =============================================================================
@@ -592,6 +631,8 @@ def options():
                   help="encoding of output pages (default: utf-8)")
     og.add_option("" , "--ignore", default=r"(^\.)|(~$)", metavar="REGEX",
                   help="input files to ignore (default: '(^\.)|(~$)')")
+    og.add_option("" , "--sitemap", action="store_true", default=False,
+                  help="create a sitemap file")
     op.add_option_group(og)
     
     og = optparse.OptionGroup(op, "Serve options")
