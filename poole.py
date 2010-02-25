@@ -28,7 +28,6 @@ import codecs
 from ConfigParser import SafeConfigParser
 import glob
 import imp
-import inspect
 import optparse
 import os
 import os.path
