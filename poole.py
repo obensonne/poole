@@ -357,7 +357,7 @@ def build(project, opts):
     regx_eval = re.compile(r'(?<!\\)(?:(?:<!--|{){)((?:.*?\n?)*)(?:}(?:-->|}))')
 
     def repl_eval(m):
-        """Replacement callback for re.sub()."""
+        """Replace a Python expression block by its evaluation."""
         expr = m.group(1)
         env = opts.macros.copy()
         env.update({"pages": pages, "page": page})
@@ -369,7 +369,7 @@ def build(project, opts):
     regx_exec = re.compile(r'(?<!\\)(?:(?:<!--|{)%)((?:.*?\n?)*)(?:%(?:-->|}))')
     
     def repl_exec(m):
-        """Replacement callback for re.sub()."""
+        """Replace a block of Python statements by their standard output."""
         stmt = m.group(1)
         
         # base indentation
@@ -392,9 +392,6 @@ def build(project, opts):
             repl = sys.stdout.getvalue()[:-1] # remove last line break
             sys.stdout = sys.__stdout__ 
             return repl
-    
-    def repl_link(m):
-        return urlparse.urljoin(opts.base_url, m.group(1))
     
     # -------------------------------------------------------------------------
     # preparations
