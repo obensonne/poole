@@ -450,9 +450,10 @@ def build(project, opts):
         os.mkdir(dir_out)
 
     # macro module
+    class nomod: pass # dummy module, something we can set attributes on
     fname = opj(opts.project, "macros.py")
     macros = {"__encoding__": opts.output_enc}
-    macmod = opx(fname) and imp.load_source("macros", fname) or None
+    macmod = opx(fname) and imp.load_source("macros", fname) or nomod
     for attr in dir(macmod):
         if not attr.startswith("_"):
             macros[attr] = getattr(macmod, attr)
@@ -485,12 +486,14 @@ def build(project, opts):
         skeleton = fp.read()
     
     macros["pages"] = pages
+    macmod.pages = pages
     
     for page in pages:
         
         print("info   : processing %s" % page.fname)
 
         macros["page"] = page
+        macmod.page = page
         
         # replacements, phase 1 (expressions and statements in page source)
         out = regx_eval.sub(repl_eval, page.source)
