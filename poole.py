@@ -347,7 +347,7 @@ def build(project, opts):
         
         expr = m.group(1)
         try:
-            return str(eval(expr, macros))
+            return str(eval(expr, macros.copy()))
         except:
             abort_iex(page, "expression", expr, traceback.format_exc())
 
@@ -366,7 +366,7 @@ def build(project, opts):
         # execute
         sys.stdout = StringIO.StringIO()
         try:
-            exec stmt in macros
+            exec stmt in macros.copy()
         except:
             sys.stdout = sys.__stdout__
             abort_iex(page, "statements", stmt, traceback.format_exc())
