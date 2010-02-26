@@ -54,16 +54,16 @@ MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
 
 SITEMAP_TMPL = """<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-{urls}
+%s
 </urlset>
 """
 
 SITEMAP_URL_TMPL = """
 <url>
-    <loc>{base}{url}</loc>
-    <lastmod>{date}</lastmod>
-    <changefreq>{changefreq}</changefreq>
-    <priority>{priority}</priority>
+    <loc>%s%s</loc>
+    <lastmod>%s</lastmod>
+    <changefreq>%s</changefreq>
+    <priority>%s</priority>
 </url>
 """
 
@@ -92,12 +92,10 @@ EXAMPLE_FILES =  {
     <!--%
         mpages = [p for p in pages if "menu-position" in p]
         mpages.sort(key=lambda p: int(p["menu-position"]))
-        
-        html = '<span class="{style}"><a href="{link}">{name}</a></span>'
-        
+        entry = '<span class="%s"><a href="%s">%s</a></span>'
         for p in mpages:
             style = p["title"] == page["title"] and "current" or ""
-            print html.format(style=style, link=p.url, name=p.title)
+            print(entry % (style, p["url"], p["title"]))
     %-->
     </div>
     <div id="content">{{ __content__ }}</div>
@@ -470,17 +468,18 @@ def build(project, opts):
     # sitemap
     # -------------------------------------------------------------------------
 
-    urls = []
-    date = datetime.strftime(datetime.now(), "%Y-%m-%d")
-    for p in pages:
-        url = SITEMAP_URL_TMPL.format(base=opts.base_url, url=p.url, date=date,
-                                      changefreq=p.get("changefreq", "monthly"),
-                                      priority=p.get("priority", "0.8"))
-        urls.append(url)
-
     if opts.sitemap:
+        
+        urls = []
+        date = datetime.strftime(datetime.now(), "%Y-%m-%d")
+        for p in pages:
+            url = SITEMAP_URL_TMPL % (opts.base_url, p.url, date,
+                                      p.get("changefreq", "monthly"),
+                                      p.get("priority", "0.8"))
+            urls.append(url)
+
         with open(opj(opts.project, "output", "sitemap.xml"), "w") as fp:
-            fp.write(SITEMAP_TMPL.format(urls="".join(urls)))
+            fp.write(SITEMAP_TMPL % "".join(urls))
 
     print("success: built project")
 
