@@ -297,8 +297,8 @@ class Page(dict):
         title = title.replace("_", " ")
         post = post and post.replace("_", " ") or None
         self["title"] = self.get("title", title)
-        self["date"] = self.get("date", date)
-        self["post"] = self.get("post", post)
+        if date and "date" not in self: self["date"] = date
+        if post and "post" not in self: self["post"] = post
         
     def __getattribute__(self, name):
         
