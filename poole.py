@@ -391,9 +391,15 @@ def build(project, opts):
         
         expr = m.group(1)
         try:
-            return str(eval(expr, macros.copy()))
+            repl = eval(expr, macros.copy())
         except:
             abort_iex(page, "expression", expr, traceback.format_exc())
+        else:
+            if not isinstance(repl, basestring):
+                repl = str(repl)
+            elif not isinstance(repl, unicode):
+                repl = repl.decode("utf-8")
+            return repl
 
     regx_exec = re.compile(r'(?<!\\)(?:(?:<!--|{)%)((?:.*?\n?)*)(?:%(?:-->|}))')
     
@@ -417,7 +423,7 @@ def build(project, opts):
         else:
             repl = sys.stdout.getvalue()[:-1] # remove last line break
             sys.stdout = sys.__stdout__
-            return repl
+            return repl.decode(opts.input_enc)
     
     # -------------------------------------------------------------------------
     # preparations
