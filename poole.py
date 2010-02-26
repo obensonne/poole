@@ -47,28 +47,7 @@ from BaseHTTPServer import HTTPServer
 import markdown
 
 # =============================================================================
-# constants
-# =============================================================================
-
-MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
-
-SITEMAP_TMPL = """<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-%s
-</urlset>
-"""
-
-SITEMAP_URL_TMPL = """
-<url>
-    <loc>%s%s</loc>
-    <lastmod>%s</lastmod>
-    <changefreq>%s</changefreq>
-    <priority>%s</priority>
-</url>
-"""
-
-# =============================================================================
-# example content for a new project
+# init site
 # =============================================================================
 
 EXAMPLE_FILES =  {
@@ -263,9 +242,45 @@ pre {
 """
 }
 
+def init(project):
+    """Initialize a site project."""
+    
+    if not opx(project):
+        os.makedirs(project)
+        
+    if os.listdir(project):
+        print("error  : project dir %s is not empty, abort" % project)
+        sys.exit(1)
+    
+    os.mkdir(opj(project, "input"))
+    os.mkdir(opj(project, "output"))
+    
+    for fname, content in EXAMPLE_FILES.items():
+        with open(opj(project, fname), 'w') as fp:
+            fp.write(content)
+
+    print("success: initialized project")
+
 # =============================================================================
-# page class
+# build site
 # =============================================================================
+
+MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
+
+SITEMAP_TMPL = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+%s
+</urlset>
+"""
+
+SITEMAP_URL_TMPL = """
+<url>
+    <loc>%s%s</loc>
+    <lastmod>%s</lastmod>
+    <changefreq>%s</changefreq>
+    <priority>%s</priority>
+</url>
+"""
 
 class Page(dict):
     """Abstraction of a source page."""
@@ -339,10 +354,6 @@ class Page(dict):
                 return self[name]
             raise e
         
-# =============================================================================
-# build site
-# =============================================================================
-
 def build(project, opts):
     """Build a site project."""
     
@@ -512,29 +523,6 @@ def build(project, opts):
             fp.write(SITEMAP_TMPL % "".join(urls))
 
     print("success: built project")
-
-# =============================================================================
-# init site
-# =============================================================================
-
-def init(project):
-    """Initialize a site project."""
-    
-    if not opx(project):
-        os.makedirs(project)
-        
-    if os.listdir(project):
-        print("error  : project dir %s is not empty, abort" % project)
-        sys.exit(1)
-    
-    os.mkdir(opj(project, "input"))
-    os.mkdir(opj(project, "output"))
-    
-    for fname, content in EXAMPLE_FILES.items():
-        with open(opj(project, fname), 'w') as fp:
-            fp.write(content)
-
-    print("success: initialized project")
 
 # =============================================================================
 # serve site
