@@ -290,8 +290,6 @@ SITEMAP_URL_TMPL = """
 class Page(dict):
     """Abstraction of a source page."""
     
-    all_pages = None
-    
     _re_eom = r'^---+ *\n?$'
     _sec_macros = "macros"
     _modmacs = None
