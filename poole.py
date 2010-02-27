@@ -26,7 +26,6 @@ from __future__ import with_statement
 
 import codecs
 from ConfigParser import SafeConfigParser
-from datetime import datetime
 import glob
 import imp
 import optparse
@@ -277,21 +276,6 @@ def init(project):
 
 MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
 
-SITEMAP_TMPL = """<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-%s
-</urlset>
-"""
-
-SITEMAP_URL_TMPL = """
-<url>
-    <loc>%s%s</loc>
-    <lastmod>%s</lastmod>
-    <changefreq>%s</changefreq>
-    <priority>%s</priority>
-</url>
-"""
-
 class Page(dict):
     """Abstraction of a source page."""
     
@@ -530,23 +514,6 @@ def build(project, opts):
         with codecs.open(fname, 'w', opts.output_enc) as fp:
             fp.write(out)
 
-    # -------------------------------------------------------------------------
-    # sitemap
-    # -------------------------------------------------------------------------
-
-    if opts.sitemap:
-        
-        urls = []
-        date = datetime.strftime(datetime.now(), "%Y-%m-%d")
-        for p in pages:
-            url = SITEMAP_URL_TMPL % (opts.base_url, p.url, date,
-                                      p.get("changefreq", "monthly"),
-                                      p.get("priority", "0.8"))
-            urls.append(url)
-
-        with open(opj(opts.project, "output", "sitemap.xml"), "w") as fp:
-            fp.write(SITEMAP_TMPL % "".join(urls))
-
     print("success: built project")
 
 # =============================================================================
@@ -596,8 +563,6 @@ def options():
                   help="encoding of output pages (default: utf-8)")
     og.add_option("" , "--ignore", default=r"(^\.)|(~$)", metavar="REGEX",
                   help="input files to ignore (default: '(^\.)|(~$)')")
-    og.add_option("" , "--sitemap", action="store_true", default=False,
-                  help="create a sitemap file")
     op.add_option_group(og)
     
     og = optparse.OptionGroup(op, "Serve options")
