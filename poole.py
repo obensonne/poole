@@ -44,7 +44,12 @@ import urlparse
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 
-import markdown
+try:
+    import markdown
+except ImportError:
+    print("error: need python-markdown, get it from "
+          "http://www.freewisdom.org/projects/python-markdown/Installation")
+    sys.exit(1)
 
 # =============================================================================
 # init site
