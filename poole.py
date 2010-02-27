@@ -316,7 +316,7 @@ class Page(dict):
         self["url"] = self["url"][len(strip):].lstrip(os.path.sep)
         self["url"] = self["url"].replace(os.path.sep, "/")
         
-        self.fname = fname
+        self["fname"] = fname
         
         with codecs.open(fname, 'r', opts.input_enc) as fp:
             self.raw = fp.readlines()
