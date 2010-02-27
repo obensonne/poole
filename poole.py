@@ -61,7 +61,7 @@ EXAMPLE_FILES =  {
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
-    <title>poole - {{ page.get("title") }}</title>
+    <title>poole - {{ page["title"] }}</title>
     <meta name="description" content="{{ page.get("description", "a poole site") }}" />
     <meta name="keywords" content="{{ page.get("keywords", "poole") }}" />
     <link rel="stylesheet" type="text/css" href="poole.css" />
@@ -70,7 +70,7 @@ EXAMPLE_FILES =  {
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{{ page.title }}</h2>
+         <h2>{{ page["title"] }}</h2>
     </div>
     <div id="menu">
     <!--%
