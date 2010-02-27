@@ -481,16 +481,15 @@ def build(project, opts):
             else:
                 shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
 
-    # -------------------------------------------------------------------------
-    # run 'once' functions in macro module
-    # -------------------------------------------------------------------------
-    
     macros["pages"] = pages
     macmod.pages = pages
     
-    if hasattr(macmod, "once") and macmod.once:
-        for ofn in macmod.once:
-            ofn()
+    # -------------------------------------------------------------------------
+    # run 'once' functions in macro module
+    # -------------------------------------------------------------------------
+
+    for fn in [a for a in dir(macmod) if a.startswith("once_")]:
+        getattr(macmod, fn)()
 
     # -------------------------------------------------------------------------
     # convert pages
