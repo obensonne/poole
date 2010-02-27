@@ -482,14 +482,22 @@ def build(project, opts):
                 shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
 
     # -------------------------------------------------------------------------
+    # run 'once' functions in macro module
+    # -------------------------------------------------------------------------
+    
+    macros["pages"] = pages
+    macmod.pages = pages
+    
+    if hasattr(macmod, "once") and macmod.once:
+        for ofn in macmod.once:
+            ofn()
+
+    # -------------------------------------------------------------------------
     # convert pages
     # -------------------------------------------------------------------------
     
     with codecs.open(opj(project, "page.html"), 'r', opts.input_enc) as fp:
         skeleton = fp.read()
-    
-    macros["pages"] = pages
-    macmod.pages = pages
     
     for page in pages:
         
