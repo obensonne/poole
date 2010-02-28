@@ -1,0 +1,209 @@
+# Poole
+
+**Create simple websites fast, now.**
+
+Poole is an easy to use Markdown driven static website generator. You write the
+content of your pages in markdown and Poole creates a nice and simple site
+with a navigation menu. You don't need to learn a template or preprocessing
+engine.
+
+Though Poole is made for simple sites, it has basic support for content
+generation by embedding Python code in page source files. This is a dirty merge
+of content and logic but for simple sites it's a pragmatic way to get things
+done fast and easy -- if you know Python you're ready to start.
+
+**Requirements:**
+To use Poole, you need Python ≥ 2.5 and python-markdown installed on your
+system. Poole has been tested on Linux but should also work on other Unix
+systems and Windows (in theory, report an issue if it fails).
+
+## Getting Started
+
+Clone oder download ([zip][zip]), [tgz][tgz]) the repository and then put
+*poole.py* to your *PATH*:
+
+    $ hg clone http://bitbucket.org/obensonne/poole/ /some/where/poole
+    $ export PATH=$PATH:/some/where/poole
+
+**TIP**: You might want to add the last command to your `~/.bashrc`.
+
+Create and build a site project:
+
+    $ mkdir /path/to/site/project
+    $ cd /path/to/site/project
+    $ poole.py --init
+    $ poole.py --build
+    $ poole.py --serve
+
+Done. You've just created a website! Browse <http://localhost:8080/> and watch
+the example pages which have been created during initialization.
+
+To write your own pages, use the example pages in the *input* folder as a
+starting point.
+
+Run `poole.py --build` whenever you've made some changes in the *input* folder.
+
+## Layout
+
+Every Poole page is based on the skeleton file `page.html`. Hence adjusting
+the site layout means adjusting `page.html`and extending or replacing its CCS
+file `input/poole.css`.
+
+The only thing you should keep in `page.html` are the embedded
+\{{\_\_content\_\_}} and \{{\_\_encoding\_\_}} expressions.
+Below is an almost minimal `page.html` file. It does not look nice but it's a
+clean starting point to build your own layout from scratch.
+
+Minimal `page.html`:
+
+    #!html
+    <html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=\{{ __encoding__ }}" />
+      </head>
+      <body>
+        \{{ __content __ }}
+      </body>
+    </html>
+
+
+## How does it work
+
+
+
+## Content generation
+
+Technically Poole is something between plain *Markdown* to *HTML* conversion
+and more sophisticated static site generators like [Hyde][]. Poole allows you to
+embed Python code in your pages to *generate* content:
+
+[hyde]: http://ringce.com/hyde
+
+`input/some-page.md`:
+
+    Here is normal text in *markdown* flavor.
+    \{%
+    print "hello poole"
+    %}
+    Did you know? The sum of 2 and 2 is \{{ 2 + 2 }}.
+    
+This example demonstrates 2 ways to embed Python code, either as statements or
+as expressions:
+
+  1. Everything between `\{%` and `%}` are *statements* and whatever is printed
+     to *stdout* during their execution is going to be part of the final HTML
+     page.
+  2. Everything between `\{{` and `}}` are *expressions* and their evaluation is
+     going to be part of the final page.
+     
+**TIP**: Instead of the outer curly brackets `{` and `}` you can also use
+`<!--` and `-->` to prevent syntax highlighting markdown editors from getting
+confused by the Python code.
+
+### Outsource complex code blocks 
+
+To keep embedded code short and compact, it can be outsourced into a file
+called `macros.py` in a project's root folder (where the `page.html` file
+is located). Every public attribute in `macros.py` is available within embedded
+Python code blocks:
+
+`macros.py`:
+
+    from datetime import date
+    def today():
+        return date.today().strftime("%B %d, %Y")
+
+`input/some-page.md`:
+
+    This site has been built on \{{ today() }}.
+
+### Working with pages
+
+Next to stuff defined in `macros.py` the objects `page` and `pages` are
+available in embedded Python code. The first one is a dictionary
+describing the page in which the code is embedded. The second one is a list
+of *all* pages in the project.
+
+The following attributes are always set in a page dictionary:
+
+  * **title**: The page's title, by default its filename without extension
+    (setting alternatives is described in next section).
+  * **fname**: Absolute path to the page's source file, e.g.
+    `/path/to/project/input/stuff/news.md`.
+  * **url**: The page's relative URL, e.g. for a source page
+    `input/stuff/news.md` this is `stuff/news.html`.
+
+The example `page.html` file in a freshly initialized site project uses a page's
+*title* attribute:
+
+    ...
+    <div id="header">
+         <h1>a poole site</h1>
+         <h2>{{ page["title"] }}</h2>
+    </div>
+    ...
+
+**TIP:** All items in a page dictionary are exposed as attributes, i.e.
+`page["foobar"]` is identical to `page.foobar`. Dictionary access is useful
+if an item may not be set, e.g.: `page.get("foobar", "...")`. 
+
+#### Setting page attributes
+
+Page attributes can be set at the top of a page's source file, in [Python's
+configuration file style][pyconf]. They are delimited from the page's content
+by a line with 3 or more dashes.
+
+[pyconf]: http://docs.python.org/library/configparser.html
+
+`input/stuff/news.md`:
+
+    title: Hot News
+    foobar: King Kong
+    ---
+    Here are some news about \{{ page.foobar }}.
+    Did I say \{% print(page.foobar) %}?
+    
+That way you can also set a page's title explicitly, instead of using the file
+name. Some useful attributes are *description* and *keywords*, which indeed get
+used by the default `page.html` file to set HTML meta tags. Here it comes in
+handy to set *default* page attributes in the `macros.py` file:
+
+`macros.py`:
+
+    page = { "description": "some stuff", "keywords": "stuff" }
+    
+That way you can safely use the *description* and *keywords* attributes
+without bothering if they are really defined in every page.
+
+#### Page objects in the macro module
+
+<!--
+The last one are the command line options
+passed to Poole in as parsed by [Python's optparse][optparse]. 
+
+[optparse]: http://docs.python.org/library/optparse.html
+-->
+
+The objects `pages` and `page` are also available within
+`macros.py`. That means you can define them as dummys in `macros.py` and
+Poole updates them when loading the `macros` module.
+
+`macros.py`:
+
+    page = {}
+    pages = []
+    
+    def something():
+        # when executing this, the page and pages objects above are up-to-date
+        print page["title"]
+
+## Tips, tricks and useful stuff
+
+### Set defaults for page attributes
+
+### List blog posts
+
+### Generate a sitemap.xml file
+
+[zip]: http://bitbucket.org/obensonne/poole/get/tip.zip
+[tgz]: http://bitbucket.org/obensonne/poole/get/tip.tar.gz
