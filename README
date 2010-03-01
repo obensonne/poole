@@ -89,19 +89,18 @@ site layout means adjusting `page.html` and extending or replacing its CCS file
 `input/poole.css`.
 
 The only thing you should keep in `page.html` are the embedded
-\{{\_\_content\_\_}} and \{{\_\_encoding\_\_}} expressions.  Below is an almost
+{{\_\_content\_\_}} and {{\_\_encoding\_\_}} expressions.  Below is an almost
 minimal `page.html` file. It does not look nice but it's a clean starting point
 to build your own layout from scratch.
 
 Minimal `page.html`:
 
-    #!html
     <html>
       <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=\{{ __encoding__ }}" />
+        <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
       </head>
       <body>
-        \{{ __content __ }}
+        {{ __content __ }}
       </body>
     </html>
 
@@ -115,18 +114,18 @@ to embed Python code in your pages to *generate* content:
 `input/some-page.md`:
 
     Here is normal text in *markdown* flavor.
-    \{%
+    {%
     print "hello poole"
     %}
-    Did you know? The sum of 2 and 2 is \{{ 2 + 2 }}.
+    Did you know? The sum of 2 and 2 is {{ 2 + 2 }}.
 
 This example demonstrates 2 ways to embed Python code, either as statements or
 as expressions:
 
-  1. Everything between `\{%` and `%}` are *statements* and whatever is printed
+  1. Everything between `{%` and `%}` are *statements* and whatever is printed
      to *stdout* during their execution is going to be part of the final HTML
      page.
-  2. Everything between `\{{` and `}}` are *expressions* and their evaluation is
+  2. Everything between `{{` and `}}` are *expressions* and their evaluation is
      going to be part of the final page.
  
 **TIP**: Instead of the outer curly brackets `{` and `}` you can also use
@@ -155,7 +154,7 @@ available within embedded Python code blocks:
 
 `input/some-page.md`:
 
-    This site has been updated on \{{ today() }} by \{{ author }}.
+    This site has been updated on {{ today() }} by {{ author }}.
 
 ### Working with pages
 
@@ -198,8 +197,8 @@ by a line with 3 or more dashes.
     title: Hot News
     foobar: King Kong
     ---
-    Here are some news about \{{ page.foobar }}.
-    Did I say \{% print(page.foobar) %}?
+    Here are some news about {{ page.foobar }}.
+    Did I say {% print(page.foobar) %}?
 
 That way you can also set a page's title explicitly, instead of using the file
 name. Other useful attributes to set are *description* and *keywords*, which
@@ -263,9 +262,9 @@ attributes in every blog post page:
     date: 2010-03-01
     ---
 
-    # \{{ page.post }}
+    # {{ page.post }}
 
-    Posted on \{{ page.date }}
+    Posted on {{ page.date }}
 
     My hero is full of keyboards. Get nonsense at <http://automeme.net/>
 
@@ -275,7 +274,7 @@ attributes in every blog post page:
 
     # My posts
 
-    \{%
+    {%
     from datetime import datetime
     posts = [p for p in pages if "post" in p] # get all blog post pages
     posts.sort(key=lambda p: p.get("date"), reverse=True) # sort post pages by date
