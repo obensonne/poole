@@ -440,6 +440,9 @@ def build(project, opts):
     macros = {"__encoding__": opts.output_enc}
     macmod = opx(fname) and imp.load_source("macros", fname) or nomod
     setattr(macmod, "options", opts)
+    setattr(macmod, "project", opts.project)
+    setattr(macmod, "input", os.path.join(opts.project, "input"))
+    setattr(macmod, "output", os.path.join(opts.project, "output"))
     for attr in dir(macmod):
         if not attr.startswith("_"):
             macros[attr] = getattr(macmod, attr)
