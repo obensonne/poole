@@ -559,8 +559,8 @@ def options():
                   help="encoding of input pages (default: utf-8)")
     og.add_option("", "--output-enc", default="utf-8", metavar="ENC",
                   help="encoding of output pages (default: utf-8)")
-    og.add_option("" , "--ignore", default=r"(^\.)|(~$)", metavar="REGEX",
-                  help="input files to ignore (default: '(^\.)|(~$)')")
+    og.add_option("" , "--ignore", default=r"^\.|~$", metavar="REGEX",
+                  help="input files to ignore (default: '^\.|~$')")
     op.add_option_group(og)
     
     og = optparse.OptionGroup(op, "Serve options")
