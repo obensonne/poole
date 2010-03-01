@@ -12,9 +12,14 @@ generation by embedding Python code in page source files. This is a dirty merge
 of content and logic but for simple sites it's a pragmatic way to get things
 done fast and easy -- if you know Python you're ready to start.
 
-**Requirements:** To use Poole, you need Python ≥ 2.5 and python-markdown
-installed on your system. Poole has been tested on Linux but should also work
-on other Unix systems and Windows (in theory, report an issue if it fails).
+## Requirements
+
+**You** should know Markdown and optionally Python if you want to use Poole's
+dirty content generation capability.
+
+**Your system** should have installed Python ≥ 2.5 and python-markdown. Poole
+has been tested on Linux but should also work on other Unix systems and Windows
+(in theory, [report an issue][issues] if it fails).
 
 [markdown]: http://daringfireball.net/projects/markdown/
 
@@ -78,7 +83,7 @@ will result in an output folder like that:
 ## Page Layout
 
 Every Poole page is based on the skeleton file `page.html`. Hence adjusting the
-site layout means adjusting `page.html`and extending or replacing its CCS file
+site layout means adjusting `page.html` and extending or replacing its CCS file
 `input/poole.css`.
 
 The only thing you should keep in `page.html` are the embedded
@@ -159,11 +164,11 @@ the project.
 
 The following attributes are always set in a page dictionary:
 
-  * **title**: The page's title, by default its filename without extension
-    (setting alternatives is described in next section).
-  * **fname**: Path to the page's source file, e.g.
+  * **title:** The page's title, by default its filename without extension
+    (setting alternatives is described in the next section).
+  * **fname:** Path to the page's source file, e.g.
     `/path/to/project/input/stuff/news.md`.
-  * **url**: The page's relative URL, e.g. for a source page
+  * **url:** The page's relative URL, e.g. for a source page
     `input/stuff/news.md` this is `stuff/news.html`.
 
 The example `page.html` file in a freshly initialized site project uses a
@@ -223,20 +228,27 @@ updates them when loading the `macros` module.
         # when executing this, the page and pages objects above are up-to-date
         print page["title"]
 
-### Command line arguments
+### Options and paths
 
-The command line arguments given to Poole are available in embedded code as
-well as in the macros module using the object `options`, which is the outcome
-of [Python's optparse][pyopts].
+Similarly to `page` and `pages` the following objects are available within
+embedded Python code and within the *macros* module:
 
-The options are useful to get the site's base URL (`options.base_url`) or the
-project's path (`options.project`).
+  * **options:** The command line arguments given to Poole as parsed
+    [Python's optparse module][pyopts]. For instance the base URL can be
+    retrieved by `options.base_url`.
+  * **project:** Path to the project's root directory.
+  * **input:** Path to the project's input directory.
+  * **output:** Path to the project's input directory.
 
 [pyopts]: http://docs.python.org/library/optparse.html
 
 ### Howtos
 
-#### List blog posts
+#### Navigation menu
+
+Have a look into the `page.html` file in a freshly initialized Poole project.
+
+#### List of blog posts
 
 If you want to write some blog posts, you probably would like to have a page
 listing all or the latest blog posts. This is easy if you set certain page
@@ -279,11 +291,12 @@ encode them in the page's file name using a structure like
 the page attributes which has been set manually in the example above.
 
 To see this example in action, have a look into the example pages in a freshly
-generated Poole project.
+initialized Poole project.
 
-#### Generate a Google sitemap.xml file
+#### Google sitemap file
 
-Put this into the project's `macros.py` file:
+To generate a Google sitemap.xml file, put this into the project's `macros.py`
+file:
 
     # -----------------------------------------------------------------------------
     # generate sitemap.xml
@@ -324,9 +337,10 @@ You probably want to adjust the default values for *changefreq* and *priority*.
 **Info:** Every function in `macros.py` whose name starts with `once_` is
 executed exactly once per project build.
 
-#### Generate an RSS feed for blog posts
+#### RSS feed for blog posts
 
-Put this into the project's `macros.py` file and adjust for your site:
+To generate an RSS feed for blog posts put this into the project's `macros.py`
+file and adjust for your site:
 
     # -----------------------------------------------------------------------------
     # generate rss feed
@@ -365,6 +379,7 @@ Put this into the project's `macros.py` file and adjust for your site:
     def once_rss():
         items = []
         posts = [p for p in pages if "post" in p] # get all blog post pages
+        posts.sort(key=lambda p: p.date, reverse=True)
         for p in posts:
             title = p.post
             link = "%s/%s" % (options.base_url.rstrip("/"), p.url)
@@ -374,17 +389,49 @@ Put this into the project's `macros.py` file and adjust for your site:
             items.append(_RSS_ITEM % (title, link, desc, date, link))
 
         items = "".join(items)
-        title = "My Blog"
+
+        # --- CHANGE THIS --- #
+        title = "Maximum volume yields maximum moustaches"
         link = "%s/blog.html" % options.base_url.rstrip("/")
         desc = "My name is dragonforce. You killed my dragons. Prepare to scream."
         date = email.utils.formatdate()
 
         rss = _RSS % (title, link, desc, date, date, items)
 
-        fname = os.path.join(options.project, "output", "rss.xml")
-        fp = open(fname, 'w')
+        fp = open(os.path.join(output, "rss.xml"), 'w')
         fp.write(rss)
         fp.close()
+
+#### Convert CleverCSS to CSS
+
+To convert all [CleverCSS][] files in the `input` directory to regular CSS
+files in the `output` directory, put this into the project's `macros.py`
+(assuming you use `.ccss` as file name extension):
+
+    # -----------------------------------------------------------------------------
+    # convert clevercss files to css
+    # -----------------------------------------------------------------------------
+
+    import clevercss
+    import glob
+    import os.path
+    
+    def once_ccss():
+        for ccss in glob.glob(os.path.join(input, "**.ccss")):
+            css = ccss[len(input):].lstrip("/")
+            css = "%s.css" % os.path.splitext(css)[0]
+            css = os.path.join(output, css)
+            fpi = open(ccss)
+            fpo = open(css, 'w')
+            fpo.write(clevercss.convert(fpi.read()))
+            fpi.close()
+            fpo.close()
+
+To prevent the original *CCSS* files from getting copied to the output
+directory, use Poole's *--ignore* option:
+`poole.py --build --ignore '^\.|~$|\.ccss$'`.
+
+[clevercss]: http://sandbox.pocoo.org/clevercss/
 
 ## Feedback
 
