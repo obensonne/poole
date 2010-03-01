@@ -2,8 +2,8 @@
 
 **Create simple websites fast, now.**
 
-Poole is an easy to use Markdown driven static website generator. You write the
-content of your pages in markdown and Poole creates a nice and simple site
+Poole is an easy to use [Markdown][] driven static website generator. You write
+the content of your pages in Markdown and Poole creates a nice and simple site
 with a navigation menu. You don't need to learn a template or preprocessing
 engine.
 
@@ -12,14 +12,15 @@ generation by embedding Python code in page source files. This is a dirty merge
 of content and logic but for simple sites it's a pragmatic way to get things
 done fast and easy -- if you know Python you're ready to start.
 
-**Requirements:**
-To use Poole, you need Python ≥ 2.5 and python-markdown installed on your
-system. Poole has been tested on Linux but should also work on other Unix
-systems and Windows (in theory, report an issue if it fails).
+**Requirements:** To use Poole, you need Python ≥ 2.5 and python-markdown
+installed on your system. Poole has been tested on Linux but should also work
+on other Unix systems and Windows (in theory, report an issue if it fails).
+
+[markdown]: http://daringfireball.net/projects/markdown/
 
 ## Getting Started
 
-Clone oder download ([zip][zip]), [tgz][tgz]) the repository and then put
+Clone oder download ([zip][zip], [tgz][tgz]) the repository and then put
 *poole.py* to your *PATH*:
 
     $ hg clone http://bitbucket.org/obensonne/poole/ /some/where/poole
@@ -43,16 +44,47 @@ starting point.
 
 Run `poole.py --build` whenever you've made some changes in the *input* folder.
 
-## Layout
+[zip]: http://bitbucket.org/obensonne/poole/get/tip.zip
+[tgz]: http://bitbucket.org/obensonne/poole/get/tip.tar.gz
 
-Every Poole page is based on the skeleton file `page.html`. Hence adjusting
-the site layout means adjusting `page.html`and extending or replacing its CCS
-file `input/poole.css`.
+## How It Works
+
+Poole takes files from a project's `input` directoriy and copies them to the
+`output` directory. In this process files ending with *md*, *mkd*, *mdown* or
+*markdown* get converted to HTML using the project's `page.html` as a skeleton.
+
+Additionally Poole expands any macros used in a page. Don't care about that for
+now ..
+
+When running `poole.py --build` in a Poole project, an input directory like
+this:
+
+    |- input
+        |- index.md
+        |- news.textile
+        |- foo.html
+        |- images
+            |- bar.png
+
+will result in an output folder like that:
+
+    |- output
+        |- index.html
+        |- news.html
+        |- foo.html
+        |- images
+            |- bar.png
+
+## Page Layout
+
+Every Poole page is based on the skeleton file `page.html`. Hence adjusting the
+site layout means adjusting `page.html`and extending or replacing its CCS file
+`input/poole.css`.
 
 The only thing you should keep in `page.html` are the embedded
-\{{\_\_content\_\_}} and \{{\_\_encoding\_\_}} expressions.
-Below is an almost minimal `page.html` file. It does not look nice but it's a
-clean starting point to build your own layout from scratch.
+\{{\_\_content\_\_}} and \{{\_\_encoding\_\_}} expressions.  Below is an almost
+minimal `page.html` file. It does not look nice but it's a clean starting point
+to build your own layout from scratch.
 
 Minimal `page.html`:
 
@@ -67,17 +99,11 @@ Minimal `page.html`:
     </html>
 
 
-## How does it work
-
-
-
-## Content generation
+## Content Generation
 
 Technically Poole is something between plain *Markdown* to *HTML* conversion
-and more sophisticated static site generators like [Hyde][]. Poole allows you to
-embed Python code in your pages to *generate* content:
-
-[hyde]: http://ringce.com/hyde
+and more sophisticated static site generators like [Hyde][]. Poole allows you
+to embed Python code in your pages to *generate* content:
 
 `input/some-page.md`:
 
@@ -86,7 +112,7 @@ embed Python code in your pages to *generate* content:
     print "hello poole"
     %}
     Did you know? The sum of 2 and 2 is \{{ 2 + 2 }}.
-    
+
 This example demonstrates 2 ways to embed Python code, either as statements or
 as expressions:
 
@@ -95,17 +121,22 @@ as expressions:
      page.
   2. Everything between `\{{` and `}}` are *expressions* and their evaluation is
      going to be part of the final page.
-     
+ 
 **TIP**: Instead of the outer curly brackets `{` and `}` you can also use
 `<!--` and `-->` to prevent syntax highlighting markdown editors from getting
 confused by the Python code.
 
-### Outsource complex code blocks 
+**TIP:** To print the code surrounding tags literally, simply escape the
+opening tag with a backslash.
 
-To keep embedded code short and compact, it can be outsourced into a file
-called `macros.py` in a project's root folder (where the `page.html` file
-is located). Every public attribute in `macros.py` is available within embedded
-Python code blocks:
+[hyde]: http://ringce.com/hyde
+
+### Outsource complex or frequently used code
+
+To keep embedded code short and compact or to reuse it in several pages, it can
+be outsourced into a file called `macros.py` in a project's root folder (where
+the `page.html` file is located). Every public attribute in `macros.py` is
+available within embedded Python code blocks:
 
 `macros.py`:
 
@@ -113,28 +144,30 @@ Python code blocks:
     def today():
         return date.today().strftime("%B %d, %Y")
 
+    author = "Popeye"
+
 `input/some-page.md`:
 
-    This site has been built on \{{ today() }}.
+    This site has been updated on \{{ today() }} by \{{ author }}.
 
 ### Working with pages
 
 Next to stuff defined in `macros.py` the objects `page` and `pages` are
-available in embedded Python code. The first one is a dictionary
-describing the page in which the code is embedded. The second one is a list
-of *all* pages in the project.
+available in embedded Python code. The first one is a dictionary describing the
+page in which the code is embedded. The second one is a list of *all* pages in
+the project.
 
 The following attributes are always set in a page dictionary:
 
   * **title**: The page's title, by default its filename without extension
     (setting alternatives is described in next section).
-  * **fname**: Absolute path to the page's source file, e.g.
+  * **fname**: Path to the page's source file, e.g.
     `/path/to/project/input/stuff/news.md`.
   * **url**: The page's relative URL, e.g. for a source page
     `input/stuff/news.md` this is `stuff/news.html`.
 
-The example `page.html` file in a freshly initialized site project uses a page's
-*title* attribute:
+The example `page.html` file in a freshly initialized site project uses a
+page's *title* attribute:
 
     ...
     <div id="header">
@@ -144,16 +177,14 @@ The example `page.html` file in a freshly initialized site project uses a page's
     ...
 
 **TIP:** All items in a page dictionary are exposed as attributes, i.e.
-`page["foobar"]` is identical to `page.foobar`. Dictionary access is useful
-if an item may not be set, e.g.: `page.get("foobar", "...")`. 
+`page["foobar"]` is identical to `page.foobar`. Dictionary access is useful if
+an item may not be set, e.g.: `page.get("foobar", "...")`. 
 
 #### Setting page attributes
 
 Page attributes can be set at the top of a page's source file, in [Python's
 configuration file style][pyconf]. They are delimited from the page's content
 by a line with 3 or more dashes.
-
-[pyconf]: http://docs.python.org/library/configparser.html
 
 `input/stuff/news.md`:
 
@@ -162,48 +193,202 @@ by a line with 3 or more dashes.
     ---
     Here are some news about \{{ page.foobar }}.
     Did I say \{% print(page.foobar) %}?
-    
+
 That way you can also set a page's title explicitly, instead of using the file
-name. Some useful attributes are *description* and *keywords*, which indeed get
-used by the default `page.html` file to set HTML meta tags. Here it comes in
-handy to set *default* page attributes in the `macros.py` file:
+name. Other useful attributes to set are *description* and *keywords*, which
+get used by the default `page.html` file to set HTML meta tags. Here it comes
+in handy to set *default* page attributes in the `macros.py` file:
 
 `macros.py`:
 
     page = { "description": "some stuff", "keywords": "stuff" }
-    
-That way you can safely use the *description* and *keywords* attributes
-without bothering if they are really defined in every page.
 
-#### Page objects in the macro module
+That way you can safely use the *description* and *keywords* attributes without
+bothering if they are really defined in every page.
 
-<!--
-The last one are the command line options
-passed to Poole in as parsed by [Python's optparse][optparse]. 
+[pyconf]: http://docs.python.org/library/configparser.html
 
-[optparse]: http://docs.python.org/library/optparse.html
--->
+#### Accessing page objects in the macros module
 
-The objects `pages` and `page` are also available within
-`macros.py`. That means you can define them as dummys in `macros.py` and
-Poole updates them when loading the `macros` module.
+The objects `pages` and `page` are also available within `macros.py`. That
+means you can define them as dummys and reference them in `macros.py`. Poole
+updates them when loading the `macros` module.
 
 `macros.py`:
 
-    page = {}
+    page = {} # you can also set defaults here, see previous section
     pages = []
-    
+
     def something():
         # when executing this, the page and pages objects above are up-to-date
         print page["title"]
 
-## Tips, tricks and useful stuff
+### Command line arguments
 
-### Set defaults for page attributes
+The command line arguments given to Poole are available in embedded code as
+well as in the macros module using the object `options`, which is the outcome
+of [Python's optparse][pyopts].
 
-### List blog posts
+The options are useful to get the site's base URL (`options.base_url`) or the
+project's path (`options.project`).
 
-### Generate a sitemap.xml file
+[pyopts]: http://docs.python.org/library/optparse.html
 
-[zip]: http://bitbucket.org/obensonne/poole/get/tip.zip
-[tgz]: http://bitbucket.org/obensonne/poole/get/tip.tar.gz
+### Howtos
+
+#### List blog posts
+
+If you want to write some blog posts, you probably would like to have a page
+listing all or the latest blog posts. This is easy if you set certain page
+attributes in every blog post page:
+
+`input/brain-on-mongs.md`:
+
+    title: blog
+    post: This is your brain on mongs
+    date: 2010-03-01
+    ---
+
+    # \{{ page.post }}
+
+    Posted on \{{ page.date }}
+
+    My hero is full of keyboards. Get nonsense at <http://automeme.net/>
+
+`input/blog.md`:
+
+    This is my blog.
+
+    # My posts
+
+    \{%
+    from datetime import datetime
+    posts = [p for p in pages if "post" in p] # get all blog post pages
+    posts.sort(key=lambda p: p.get("date"), reverse=True) # sort post pages by date
+    for p in posts:
+        date = datetime.strptime(p["date"], "%Y-%m-%d").strftime("%B %d, %Y")
+        print "  * **[%s](%s)** - %s" % (p.post, p.url, date) # markdown list item
+    %}
+
+Feel free to adjust this to your needs.
+
+**TIP:** Instead of setting the post title and date as page attributes, you can
+encode them in the page's file name using a structure like
+`page-title.YYYY-MM-DD.post-title.md`. For instance for the file name
+`blog.2010-03-01.This_is_your_brain_on_mongs.md` Poole would automatically set
+the page attributes which has been set manually in the example above.
+
+To see this example in action, have a look into the example pages in a freshly
+generated Poole project.
+
+#### Generate a Google sitemap.xml file
+
+Put this into the project's `macros.py` file:
+
+    # -----------------------------------------------------------------------------
+    # generate sitemap.xml
+    # -----------------------------------------------------------------------------
+
+    from datetime import datetime
+    import os.path
+
+    _SITEMAP = """<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    %s
+    </urlset>
+    """
+
+    _SITEMAP_URL = """
+    <url>
+        <loc>%s%s</loc>
+        <lastmod>%s</lastmod>
+        <changefreq>%s</changefreq>
+        <priority>%s</priority>
+    </url>
+    """
+
+    def once_sitemap():
+        """Generate Google sitemap.xml file."""
+        date = datetime.strftime(datetime.now(), "%Y-%m-%d")
+        urls = []
+        for p in pages:
+            urls.append(_SITEMAP_URL % (options.base_url, p.url, date,
+                        p.get("changefreq", "monthly"), p.get("priority", "0.8")))
+        fname = os.path.join(options.project, "output", "sitemap.xml")
+        fp = open(fname, 'w')
+        fp.write(_SITEMAP % "".join(urls))
+        fp.close()
+
+You probably want to adjust the default values for *changefreq* and *priority*.
+
+**Info:** Every function in `macros.py` whose name starts with `once_` is
+executed exactly once per project build.
+
+#### Generate an RSS feed for blog posts
+
+Put this into the project's `macros.py` file and adjust for your site:
+
+    # -----------------------------------------------------------------------------
+    # generate rss feed
+    # -----------------------------------------------------------------------------
+
+    import email.utils
+    import os.path
+    import time
+
+    _RSS = """<?xml version="1.0"?>
+    <rss version="2.0">
+    <channel>
+    <title>%s</title>
+    <link>%s</link>
+    <description>%s</description>
+    <language>en-us</language>
+    <pubDate>%s</pubDate>
+    <lastBuildDate>%s</lastBuildDate>
+    <docs>http://blogs.law.harvard.edu/tech/rss</docs>
+    <generator>Poole</generator>
+    %s
+    </channel>
+    </rss>
+    """
+
+    _RSS_ITEM = """
+    <item>
+        <title>%s</title>
+        <link>%s</link>
+        <description>%s</description>
+        <pubDate>%s</pubDate>
+        <guid>%s</guid>
+    </item>
+    """
+
+    def once_rss():
+        items = []
+        posts = [p for p in pages if "post" in p] # get all blog post pages
+        for p in posts:
+            title = p.post
+            link = "%s/%s" % (options.base_url.rstrip("/"), p.url)
+            desc = p.get("description", "")
+            date = time.mktime(time.strptime("%s 12" % p.date, "%Y-%m-%d %H"))
+            date = email.utils.formatdate(date)
+            items.append(_RSS_ITEM % (title, link, desc, date, link))
+
+        items = "".join(items)
+        title = "My Blog"
+        link = "%s/blog.html" % options.base_url.rstrip("/")
+        desc = "My name is dragonforce. You killed my dragons. Prepare to scream."
+        date = email.utils.formatdate()
+
+        rss = _RSS % (title, link, desc, date, date, items)
+
+        fname = os.path.join(options.project, "output", "rss.xml")
+        fp = open(fname, 'w')
+        fp.write(rss)
+        fp.close()
+
+## Feedback
+
+Please use the [issue tracker][issues].
+
+[issues]: http://bitbucket.org/obensonne/poole/issues/
+
