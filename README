@@ -14,6 +14,8 @@ generation by embedding Python code in page source files. This is a dirty merge
 of content and logic but for simple sites it's a pragmatic way to get things
 done fast and easy -- if you know Python you're ready to start.
 
+See what you get: [example site](http://obensonne.bitbucket.org/).
+
 ## Requirements
 
 **You** should know Markdown and optionally Python if you want to use Poole's
