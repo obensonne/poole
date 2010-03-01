@@ -366,7 +366,7 @@ def build(project, opts):
     
     regx_escp = re.compile(r'\\((?:(?:&lt;|<)!--|{)(?:{|%))') # escaped code
     repl_escp = r'\1'
-    regx_rurl = re.compile(r'(?<=(?:(?:\n| )src|href)=")([^#/&].*?)(?=")')
+    regx_rurl = re.compile(r'(?<=(?:(?:\n| )src|href)=")([^#/&%].*?)(?=")')
     repl_rurl = lambda m: urlparse.urljoin(opts.base_url, m.group(1))
     
     regx_eval = re.compile(r'(?<!\\)(?:(?:<!--|{){)((?:.*?\n?)*)(?:}(?:-->|}))')
