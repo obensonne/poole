@@ -156,14 +156,12 @@ Poole recognizes the date and post title and sets them as attributes of the
 page. These attributes can then be used to generate a list of blog posts:
 
 <!--%
-# print a list all blog pages
 from datetime import datetime
-ppages = [p for p in pages if "post" in p]
-ppages.sort(key=lambda p: datetime.strptime(p["date"], "%Y-%m-%d"))
-for p in ppages:
-    date = datetime.strptime(p["date"], "%Y-%m-%d").strftime("%B %d, %Y")
-    # quite simple: print a markdown list item for each post
-    print(' * [**%s**](%s) - %s' % (p["post"], p["url"], date))
+posts = [p for p in pages if "post" in p] # get all blog post pages
+posts.sort(key=lambda p: p.get("date"), reverse=True) # sort post pages by date
+for p in posts:
+    date = datetime.strptime(p.date, "%Y-%m-%d").strftime("%B %d, %Y")
+    print "  * **[%s](%s)** - %s" % (p.post, p.url, date) # markdown list item
 %-->
 
 Have a look into `input/blog.md` to see how it works. Feel free to adjust it
