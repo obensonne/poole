@@ -70,8 +70,8 @@ this:
 
     |- input
         |- index.md
-        |- news.textile
-        |- foo.html
+        |- news.mkd
+        |- foo.mdown
         |- images
             |- bar.png
 
