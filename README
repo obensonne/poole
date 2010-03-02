@@ -114,9 +114,7 @@ to do this][pimp].
 
 ## Content Generation
 
-Technically Poole is something between plain *Markdown* to *HTML* conversion
-and more sophisticated static site generators like [Hyde][]. Poole allows you
-to embed Python code in your pages to *generate* content:
+Poole allows you to embed Python code in your pages to *generate* content:
 
 `input/some-page.md`:
 
