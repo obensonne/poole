@@ -386,12 +386,12 @@ def build(project, opts):
                 repl = repl.decode("utf-8")
             return repl
 
-    regx_exec = re.compile(r'(?<!\\)(?:(?:<!--|{)%)((?:.*?\n?)*)(?:%(?:-->|}))')
+    regx_exec = re.compile(r'(?<!\\)(?:(?:<!--|{)%)((?:.*?\r?\n?)*)(?:%(?:-->|}))')
     
     def repl_exec(m):
         """Replace a block of Python statements by their standard output."""
         
-        stmt = m.group(1)
+        stmt = m.group(1).replace("\r\n", "\n")
         
         # base indentation
         ind_lvl = len(re.findall(r'^(?: *\n)*( *)', stmt, re.MULTILINE)[0])
