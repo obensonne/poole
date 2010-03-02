@@ -107,7 +107,8 @@ Minimal `page.html`:
     </html>
 
 It's easy to apply one of the numerous free CSS templates out there to a Poole
-site. There's a blog post with [step-by-step instructions how to do this][pimp].
+site. For more information read [this blog post step-by-step instructions how
+to do this][pimp].
 
 [pimp]: http://obensonne.bitbucket.org/blog/20091122-using-a-free-css-templates-in-poole.html
 
