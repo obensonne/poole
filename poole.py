@@ -408,7 +408,9 @@ def build(project, opts):
         else:
             repl = sys.stdout.getvalue()[:-1] # remove last line break
             sys.stdout = sys.__stdout__
-            return repl.decode(opts.input_enc)
+            if not isinstance(repl, unicode):
+                repl = repl.decode(opts.input_enc)
+            return repl
     
     # -------------------------------------------------------------------------
     # preparations
