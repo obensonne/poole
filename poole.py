@@ -498,7 +498,7 @@ def build(project, opts):
         out = regx_exec.sub(repl_exec, out)
         
         # convert to HTML
-        out = markdown.Markdown().convert(out)
+        out = markdown.Markdown(extensions=opts.md_ext).convert(out)
         
         # replacements, phase 2 (variables and code blocks used in page.html)
         macros["__content__"] = out
@@ -566,6 +566,8 @@ def options():
                   help="encoding of output pages (default: utf-8)")
     og.add_option("" , "--ignore", default=r"^\.|~$", metavar="REGEX",
                   help="input files to ignore (default: '^\.|~$')")
+    og.add_option("" , "--md-ext", default=[], metavar="EXT",
+                  action="append", help="enable a markdown extension")
     op.add_option_group(og)
     
     og = optparse.OptionGroup(op, "Serve options")
