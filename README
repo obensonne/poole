@@ -319,7 +319,7 @@ file:
 
     _SITEMAP_URL = """
     <url>
-        <loc>%s%s</loc>
+        <loc>%s/%s</loc>
         <lastmod>%s</lastmod>
         <changefreq>%s</changefreq>
         <priority>%s</priority>
@@ -331,7 +331,7 @@ file:
         date = datetime.strftime(datetime.now(), "%Y-%m-%d")
         urls = []
         for p in pages:
-            urls.append(_SITEMAP_URL % (options.base_url, p.url, date,
+            urls.append(_SITEMAP_URL % (options.base_url.rstrip('/'), p.url, date,
                         p.get("changefreq", "monthly"), p.get("priority", "0.8")))
         fname = os.path.join(options.project, "output", "sitemap.xml")
         fp = open(fname, 'w')
