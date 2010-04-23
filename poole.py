@@ -457,11 +457,13 @@ def build(project, opts):
     page_global = macros.get("page", {})
     for cwd, dirs, files in os.walk(dir_in):
         cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
-        for sdir in dirs:
-            if re.search(opts.ignore, sdir): continue
-            os.mkdir(opj(dir_out, cwd_site, sdir))
+        for sdir in dirs[:]:
+            if re.search(opts.ignore, opj(cwd_site, sdir)):
+                dirs.remove(sdir)
+            else:
+                os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
-            if re.search(opts.ignore, f):
+            if re.search(opts.ignore, opj(cwd_site, f)):
                 pass
             elif re.search(MKD_PATT, f):
                 page = Page(page_global, opj(cwd, f), dir_in, opts)
