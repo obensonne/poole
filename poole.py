@@ -486,6 +486,8 @@ def build(project, opts):
     with codecs.open(opj(project, "page.html"), 'r', opts.input_enc) as fp:
         skeleton = fp.read()
     
+    pages.sort(key=lambda p: int(p.get("sval", "0")))
+    
     for page in pages:
         
         print("info   : processing %s" % page.fname)
