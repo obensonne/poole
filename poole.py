@@ -476,7 +476,7 @@ def build(project, opts):
     # run 'once' functions in macro module
     # -------------------------------------------------------------------------
 
-    for fn in [a for a in dir(macmod) if a.startswith("once_")]:
+    for fn in sorted([a for a in dir(macmod) if a.startswith("once_")]):
         getattr(macmod, fn)()
 
     # -------------------------------------------------------------------------
