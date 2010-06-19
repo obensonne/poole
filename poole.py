@@ -25,7 +25,6 @@
 from __future__ import with_statement
 
 import codecs
-from ConfigParser import SafeConfigParser
 import glob
 import imp
 import optparse
@@ -277,7 +276,8 @@ MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
 class Page(dict):
     """Abstraction of a source page."""
     
-    _re_eom = r'^---+ *\n?$'
+    _re_eom = re.compile(r'^---+ *\n?$')
+    _re_vardef = re.compile(r'^([^\n:=]+?)[:=]((?:.|\n )*)', re.MULTILINE)
     _sec_macros = "macros"
     _modmacs = None
     
@@ -307,24 +307,18 @@ class Page(dict):
         vardefs = ""
         self.source = ""
         for line in self.raw:
-            if not vardefs and re.match(self._re_eom, line):
+            if not vardefs and self._re_eom.match(line):
                 vardefs = self.source
                 self.source = "" # only macro defs until here, reset source
             else:
                 self.source += line
 
-        # evaluate macro definitions
-        tfname = ".page-macros.tmp"
-        with codecs.open(tfname, "w", opts.input_enc) as tf:
-            tf.write("[%s]\n" % self._sec_macros)
-            tf.write(vardefs)
-        with codecs.open(tfname, "r", opts.input_enc) as tf:
-            cp = SafeConfigParser()
-            cp.readfp(tf)
-        os.remove(tfname)
-        for key in cp.options(self._sec_macros):
-            self[key] = cp.get(self._sec_macros, key)
-        
+        for key, val in self._re_vardef.findall(vardefs):
+            key = key.strip()
+            val = val.strip()
+            val = re.sub(r' *\n +', ' ', val) # clean out line continueation
+            self[key] = val
+
         basename = os.path.basename(fname)
         
         fpatt = r'(.+?)(?:\.([0-9]+-[0-9]+-[0-9]+)(?:\.(.*))?)?%s' % MKD_PATT
@@ -380,8 +374,8 @@ def build(project, opts):
         except:
             abort_iex(page, "expression", expr, traceback.format_exc())
         else:
-            if not isinstance(repl, basestring):
-                repl = str(repl)
+            if not isinstance(repl, basestring): # e.g. numbers
+                repl = unicode(repl)
             elif not isinstance(repl, unicode):
                 repl = repl.decode("utf-8")
             return repl
@@ -455,7 +449,7 @@ def build(project, opts):
     
     pages = []
     page_global = macros.get("page", {})
-    for cwd, dirs, files in os.walk(dir_in):
+    for cwd, dirs, files in os.walk(dir_in.decode(opts.filename_enc)):
         cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
         for sdir in dirs[:]:
             if re.search(opts.ignore, opj(cwd_site, sdir)):
@@ -496,7 +490,7 @@ def build(project, opts):
 
         macros["page"] = page
         macmod.page = page
-        
+
         # replacements, phase 1 (expressions and statements in page source)
         out = regx_eval.sub(repl_eval, page.source)
         out = regx_exec.sub(repl_exec, out)
@@ -564,14 +558,16 @@ def options():
     og = optparse.OptionGroup(op, "Build options")
     og.add_option("", "--base-url", default="/", metavar="URL",
                   help="base url for relative links (default: /)")
-    og.add_option("", "--input-enc", default="utf-8", metavar="ENC",
-                  help="encoding of input pages (default: utf-8)")
-    og.add_option("", "--output-enc", default="utf-8", metavar="ENC",
-                  help="encoding of output pages (default: utf-8)")
     og.add_option("" , "--ignore", default=r"^\.|~$", metavar="REGEX",
                   help="input files to ignore (default: '^\.|~$')")
     og.add_option("" , "--md-ext", default=[], metavar="EXT",
                   action="append", help="enable a markdown extension")
+    og.add_option("", "--input-enc", default="utf-8", metavar="ENC",
+                  help="encoding of input pages (default: utf-8)")
+    og.add_option("", "--output-enc", default="utf-8", metavar="ENC",
+                  help="encoding of output pages (default: utf-8)")
+    og.add_option("", "--filename-enc", default="utf-8", metavar="ENC",
+                  help="encoding of file names (default: utf-8)")
     op.add_option_group(og)
     
     og = optparse.OptionGroup(op, "Serve options")

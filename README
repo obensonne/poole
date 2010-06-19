@@ -248,6 +248,18 @@ embedded Python code and within the *macros* module:
 
 [pyopts]: http://docs.python.org/library/optparse.html
 
+### Character encodings
+
+In case you use non-ASCII characters, check the *encoding* options of Poole. In
+most cases working with non-ASCII strings should work straight forward if the
+options are set properly (default is *UTF-8*).
+
+However, be aware that page variables defined within page source files and
+derived from a page's file name internally are handled as Python *unicode*
+objects. That means if you want to refer to non-ASCII page variable names and
+values form within embedded Python code or from `macros.py`, make sure to use
+*unicode* strings to reference them.
+
 ### Howtos
 
 #### Navigation menu
