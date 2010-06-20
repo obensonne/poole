@@ -276,7 +276,7 @@ MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
 class Page(dict):
     """Abstraction of a source page."""
     
-    _re_eom = re.compile(r'^---+ *\n?$')
+    _re_eom = re.compile(r'^---+ *\r?\n?$')
     _re_vardef = re.compile(r'^([^\n:=]+?)[:=]((?:.|\n )*)', re.MULTILINE)
     _sec_macros = "macros"
     _modmacs = None
