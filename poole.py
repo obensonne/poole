@@ -363,7 +363,7 @@ def build(project, opts):
     regx_rurl = re.compile(r'(?<=(?:(?:\n| )src|href)=")([^#/&%].*?)(?=")')
     repl_rurl = lambda m: urlparse.urljoin(opts.base_url, m.group(1))
     
-    regx_eval = re.compile(r'(?<!\\)(?:(?:<!--|{){)((?:.*?\n?)*)(?:}(?:-->|}))')
+    regx_eval = re.compile(r'(?<!\\)(?:(?:<!--|{){)(.*?)(?:}(?:-->|}))', re.S)
 
     def repl_eval(m):
         """Replace a Python expression block by its evaluation."""
@@ -380,7 +380,7 @@ def build(project, opts):
                 repl = repl.decode("utf-8")
             return repl
 
-    regx_exec = re.compile(r'(?<!\\)(?:(?:<!--|{)%)((?:.*?\r?\n?)*)(?:%(?:-->|}))')
+    regx_exec = re.compile(r'(?<!\\)(?:(?:<!--|{)%)(.*?)(?:%(?:-->|}))', re.S)
     
     def repl_exec(m):
         """Replace a block of Python statements by their standard output."""
