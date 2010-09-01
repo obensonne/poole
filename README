@@ -58,7 +58,7 @@ Run `poole.py --build` whenever you've made some changes in the *input* folder.
 
 ## How It Works
 
-Poole takes files from a project's `input` directoriy and copies them to the
+Poole takes files from a project's `input` directory and copies them to the
 `output` directory. In this process files ending with *md*, *mkd*, *mdown* or
 *markdown* get converted to HTML using the project's `page.html` as a skeleton.
 
@@ -239,7 +239,7 @@ updates them when loading the `macros` module.
 Similarly to `page` and `pages` the following objects are available within
 embedded Python code and within the *macros* module:
 
-  * **options:** The command line arguments given to Poole as parsed
+  * **options:** The command line arguments given to Poole as parsed by
     [Python's optparse module][pyopts]. For instance the base URL can be
     retrieved by `options.base_url`.
   * **project:** Path to the project's root directory.
