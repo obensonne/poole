@@ -338,7 +338,7 @@ file:
     </url>
     """
 
-    def once_sitemap():
+    def hook_preconvert_sitemap():
         """Generate Google sitemap.xml file."""
         date = datetime.strftime(datetime.now(), "%Y-%m-%d")
         urls = []
@@ -352,8 +352,12 @@ file:
 
 You probably want to adjust the default values for *changefreq* and *priority*.
 
-**Info:** Every function in `macros.py` whose name starts with `once_` is
-executed exactly once per project build.
+**Info:** Every function in `macros.py` whose name starts with
+`hook_preconvert_` or `hook_postconvert_` is executed exactly once per project
+build -- either before or after converting pages from markdown to HTML. In
+post-convert hooks the HTML content of a page (yet without header and footer)
+can be accessed with `page.html`. This is useful to generate full-content RSS
+feeds.
 
 #### RSS feed for blog posts
 
@@ -394,7 +398,7 @@ file and adjust for your site:
     </item>
     """
 
-    def once_rss():
+    def hook_postconvert_rss():
         items = []
         posts = [p for p in pages if "post" in p] # get all blog post pages
         posts.sort(key=lambda p: p.date, reverse=True)
@@ -434,7 +438,7 @@ files in the `output` directory, put this into the project's `macros.py`
     import glob
     import os.path
     
-    def once_ccss():
+    def hook_preconvert_ccss(): # pre- or post-convert hook, doesn't matter
         for ccss in glob.glob(os.path.join(input, "**.ccss")):
             css = ccss[len(input):].lstrip("/")
             css = "%s.css" % os.path.splitext(css)[0]

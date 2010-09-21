@@ -329,6 +329,8 @@ class Page(dict):
         if date and "date" not in self: self["date"] = date
         if post and "post" not in self: self["post"] = post
 
+        self.html = ""
+
     def __getattribute__(self, name):
 
         try:
@@ -467,41 +469,59 @@ def build(project, opts):
             else:
                 shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
 
+    pages.sort(key=lambda p: int(p.get("sval", "0")))
+
     macros["pages"] = pages
     macmod.pages = pages
 
     # -------------------------------------------------------------------------
-    # run 'once' functions in macro module
+    # run pre-convert hooks in macro module (named 'once' before)
     # -------------------------------------------------------------------------
 
-    for fn in sorted([a for a in dir(macmod) if a.startswith("once_")]):
+    hooks = [a for a in dir(macmod) if re.match(r'hook_preconvert_|once_', a)]
+    for fn in sorted(hooks):
         getattr(macmod, fn)()
 
     # -------------------------------------------------------------------------
-    # convert pages
+    # convert pages (markdown to HTML)
+    # -------------------------------------------------------------------------
+
+    for page in pages:
+
+        print("info   : convert %s" % page.fname)
+
+        # replace expressions and statements in page source
+        macmod.page = page
+        macros["page"] = page
+        out = regx_eval.sub(repl_eval, page.source)
+        out = regx_exec.sub(repl_exec, out)
+
+        # convert to HTML
+        page.html = markdown.Markdown(extensions=opts.md_ext).convert(out)
+
+    # -------------------------------------------------------------------------
+    # run post-convert hooks in macro module
+    # -------------------------------------------------------------------------
+
+    hooks = [a for a in dir(macmod) if a.startswith("hook_postconvert_")]
+    for fn in sorted(hooks):
+        getattr(macmod, fn)()
+
+    # -------------------------------------------------------------------------
+    # render complete HTML pages
     # -------------------------------------------------------------------------
 
     with codecs.open(opj(project, "page.html"), 'r', opts.input_enc) as fp:
         skeleton = fp.read()
 
-    pages.sort(key=lambda p: int(p.get("sval", "0")))
-
     for page in pages:
 
-        print("info   : processing %s" % page.fname)
+        print("info   : render %s" % page.url)
 
-        macros["page"] = page
+        # replace expressions and statements in page.html
         macmod.page = page
-
-        # replacements, phase 1 (expressions and statements in page source)
-        out = regx_eval.sub(repl_eval, page.source)
-        out = regx_exec.sub(repl_exec, out)
-
-        # convert to HTML
-        out = markdown.Markdown(extensions=opts.md_ext).convert(out)
-
-        # replacements, phase 2 (variables and code blocks used in page.html)
-        macros["__content__"] = out
+        macros["page"] = page
+        macros["__content__"] = page.html
         out = regx_eval.sub(repl_eval, skeleton)
         out = regx_exec.sub(repl_exec, out)
 
