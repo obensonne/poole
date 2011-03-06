@@ -1,5 +1,11 @@
 -*- markdown -*-
 
+<!-- ====== Flattr Poole at http://flattr.com/thing/142425/Poole ========= -->
+<p style="float: right;"><a href="http://flattr.com/thing/142425/Poole"
+target="_blank"><img src="http://api.flattr.com/button/flattr-badge-large.png"
+alt="Flattr this" title="Flattr this" border="0" /></a></p>
+<!-- ===================================================================== -->
+
 # Poole
 
 **Create simple websites fast, now.**
@@ -460,4 +466,3 @@ directory, use Poole's *--ignore* option:
 Please use the [issue tracker][issues].
 
 [issues]: http://bitbucket.org/obensonne/poole/issues/
-
