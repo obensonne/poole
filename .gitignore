@@ -1,0 +1,12 @@
+# temporary and build files
+*~
+*.pyc
+build/
+dist/
+
+# IDE files:
+.settings
+.project
+.pydevproject
+
+
