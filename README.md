@@ -1,5 +1,3 @@
-<!-- -*- markdown -*- -->
-
 <!-- ====== Flattr Poole at http://flattr.com/thing/142425/Poole ========= -->
 <p style="float: right;"><a href="http://flattr.com/thing/142425/Poole"
 target="_blank"><img src="http://api.flattr.com/button/flattr-badge-large.png"
