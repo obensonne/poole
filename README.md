@@ -1,9 +1,3 @@
-<!-- ====== Flattr Poole at http://flattr.com/thing/142425/Poole ========= -->
-<p style="float: right;"><a href="http://flattr.com/thing/142425/Poole"
-target="_blank"><img src="http://api.flattr.com/button/flattr-badge-large.png"
-alt="Flattr this" title="Flattr this" border="0" /></a></p>
-<!-- ===================================================================== -->
-
 # Poole
 
 **Create simple websites fast, now.**
@@ -19,6 +13,11 @@ of content and logic but for simple sites it's a pragmatic way to get things
 done fast and easy -- if you know Python you're ready to start.
 
 See what you get: [example site](http://obensonne.bitbucket.org/).
+
+[![Flattr this][flattr-img]][flattr-url]
+
+[flattr-url]: http://flattr.com/thing/142425/Poole
+[flattr-img]: http://api.flattr.com/button/flattr-badge-large.png "Flattr this"
 
 ## Requirements
 
