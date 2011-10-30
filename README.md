@@ -105,7 +105,7 @@ Minimal `page.html`:
         <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
       </head>
       <body>
-        {{ __content __ }}
+        {{ __content__ }}
       </body>
     </html>
 
