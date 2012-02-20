@@ -58,17 +58,17 @@ EXAMPLE_FILES =  {
 "page.html": """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
-    <title>poole - {{ page["title"] }}</title>
-    <meta name="description" content="{{ page.get("description", "a poole site") }}" />
-    <meta name="keywords" content="{{ page.get("keywords", "poole") }}" />
+    <meta http-equiv="Content-Type" content="text/html; charset={{ htmlspecialchars(__encoding__) }}" />
+    <title>poole - {{ htmlspecialchars(page["title"]) }}</title>
+    <meta name="description" content="{{ htmlspecialchars(page.get("description", "a poole site")) }}" />
+    <meta name="keywords" content="{{ htmlspecialchars(page.get("keywords", "poole")) }}" />
     <link rel="stylesheet" type="text/css" href="poole.css" />
 </head>
 <body>
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{{ page["title"] }}</h2>
+         <h2>{{ htmlspecialchars(page["title"]) }}</h2>
     </div>
     <div id="menu">
     <!--%
@@ -77,7 +77,7 @@ EXAMPLE_FILES =  {
         entry = '<span class="%s"><a href="%s">%s</a></span>'
         for p in mpages:
             style = p["title"] == page["title"] and "current" or ""
-            print(entry % (style, p["url"], p["title"]))
+            print(entry % (style, htmlspecialchars(p["url"]), htmlspecialchars(p["title"])))
     %-->
     </div>
     <div id="content">{{ __content__ }}</div>
