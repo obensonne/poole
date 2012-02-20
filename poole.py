@@ -436,13 +436,7 @@ def build(project, opts):
 
     # macro module
     fname = opj(opts.project, "macros.py")
-    macmod = opx(fname) and imp.load_source("macros", fname)
-    if macmod:
-        macros = macmod.__dict__
-    else:
-        # No macros module was defined, but we still need a dictionary
-        # to use as globals when evaluating expressions
-        macros = {}
+    macros = imp.load_source("macros", fname).__dict__ if opx(fname) else {}
 
     macros["__encoding__"] = opts.output_enc
     macros["options"] = opts
@@ -614,6 +608,7 @@ def options():
 # =============================================================================
 # template helper functions
 # =============================================================================
+
 def htmlspecialchars(s):
     """
     Replace the characters that are special within HTML (&, <, > and ")
