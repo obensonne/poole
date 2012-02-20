@@ -435,17 +435,20 @@ def build(project, opts):
         os.mkdir(dir_out)
 
     # macro module
-    class nomod: pass # dummy module, something we can set attributes on
     fname = opj(opts.project, "macros.py")
-    macros = {"__encoding__": opts.output_enc}
-    macmod = opx(fname) and imp.load_source("macros", fname) or nomod
-    setattr(macmod, "options", opts)
-    setattr(macmod, "project", project)
-    setattr(macmod, "input", dir_in)
-    setattr(macmod, "output", dir_out)
-    for attr in dir(macmod):
-        if not attr.startswith("_"):
-            macros[attr] = getattr(macmod, attr)
+    macmod = opx(fname) and imp.load_source("macros", fname)
+    if macmod:
+        macros = macmod.__dict__
+    else:
+        # No macros module was defined, but we still need a dictionary
+        # to use as globals when evaluating expressions
+        macros = {}
+
+    macros["__encoding__"] = opts.output_enc
+    macros["options"] = opts
+    macros["project"] = project
+    macros["input"] = dir_in
+    macros["output"] = dir_out
 
     # -------------------------------------------------------------------------
     # process input files
@@ -472,15 +475,14 @@ def build(project, opts):
     pages.sort(key=lambda p: int(p.get("sval", "0")))
 
     macros["pages"] = pages
-    macmod.pages = pages
 
     # -------------------------------------------------------------------------
     # run pre-convert hooks in macro module (named 'once' before)
     # -------------------------------------------------------------------------
 
-    hooks = [a for a in dir(macmod) if re.match(r'hook_preconvert_|once_', a)]
+    hooks = [a for a in macros if re.match(r'hook_preconvert_|once_', a)]
     for fn in sorted(hooks):
-        getattr(macmod, fn)()
+        macros[fn]()
 
     # -------------------------------------------------------------------------
     # convert pages (markdown to HTML)
@@ -491,7 +493,6 @@ def build(project, opts):
         print("info   : convert %s" % page.fname)
 
         # replace expressions and statements in page source
-        macmod.page = page
         macros["page"] = page
         out = regx_eval.sub(repl_eval, page.source)
         out = regx_exec.sub(repl_exec, out)
@@ -503,9 +504,9 @@ def build(project, opts):
     # run post-convert hooks in macro module
     # -------------------------------------------------------------------------
 
-    hooks = [a for a in dir(macmod) if a.startswith("hook_postconvert_")]
+    hooks = [a for a in macros if a.startswith("hook_postconvert_")]
     for fn in sorted(hooks):
-        getattr(macmod, fn)()
+        macros[fn]()
 
     # -------------------------------------------------------------------------
     # render complete HTML pages
@@ -519,7 +520,6 @@ def build(project, opts):
         print("info   : render %s" % page.url)
 
         # replace expressions and statements in page.html
-        macmod.page = page
         macros["page"] = page
         macros["__content__"] = page.html
         out = regx_eval.sub(repl_eval, skeleton)
