@@ -174,12 +174,12 @@ Currently, there is only one builtin macro available.
 
 `htmlspecialchars(s)`
 
-> Replace the characters that are special within HTML (&, <, > and ")
-> with their equivalent character entity (e.g., &amp;). This should be
-> called whenever an arbitrary string is inserted into HTML (so in most
-> places where you use `{{ variable }}` in your templates).
+> Replace the characters that are special within HTML (`&`, `<`, `>` and `"`)
+> with their equivalent character entity (e.g., `&amp;`). This should be
+> called whenever an arbitrary string is inserted into HTML (i.e. use
+> `{{ htmlspecialchars(variable) }}` instead of `{{ variable }}`).
 >
-> Note that " is not special in most HTML, only within attributes.
+> Note that `"` is not special in most HTML, only within attributes.
 > However, since escaping it does not hurt within normal HTML, it is
 > just escaped unconditionally.
 
