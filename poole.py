@@ -450,6 +450,9 @@ def build(project, opts):
     macros["input"] = dir_in
     macros["output"] = dir_out
 
+    # "builtin" functions for use in macros and templates
+    macros["htmlspecialchars"] = htmlspecialchars
+
     # -------------------------------------------------------------------------
     # process input files
     # -------------------------------------------------------------------------
@@ -607,6 +610,31 @@ def options():
     opts.project = args and args[0] or "."
 
     return opts
+
+# =============================================================================
+# template helper functions
+# =============================================================================
+def htmlspecialchars(s):
+    """
+    Replace the characters that are special within HTML (&, <, > and ")
+    with their equivalent character entity (e.g., &amp;). This should be
+    called whenever an arbitrary string is inserted into HTML (so in most
+    places where you use {{ variable }} in your templates).
+
+    Note that " is not special in most HTML, only within attributes.
+    However, since escaping it does not hurt within normal HTML, it is
+    just escaped unconditionally.
+    """
+    escape = {
+        "&": "&amp;",
+        '"': "&quot;",
+        ">": "&gt;",
+        "<": "&lt;",
+    }
+
+    # Look up the translation for every character in s (defaulting to
+    # the character itself if no translation is available).
+    return ''.join([escape.get(c,c) for c in s])
 
 # =============================================================================
 # main

@@ -164,6 +164,25 @@ available within embedded Python code blocks:
 
     This site has been updated on {{ today() }} by {{ author }}.
 
+#### Builtin macros
+
+Builtin macros can be used from the macros module as well as from python
+code in your pages and templates (just as if they are defined within
+your macros.py).
+
+Currently, there is only one builtin macro available.
+
+`htmlspecialchars(s)`
+
+> Replace the characters that are special within HTML (&, <, > and ")
+> with their equivalent character entity (e.g., &amp;). This should be
+> called whenever an arbitrary string is inserted into HTML (so in most
+> places where you use `{{ variable }}` in your templates).
+>
+> Note that " is not special in most HTML, only within attributes.
+> However, since escaping it does not hurt within normal HTML, it is
+> just escaped unconditionally.
+
 ### Working with pages
 
 Next to stuff defined in `macros.py` the objects `page` and `pages` are
