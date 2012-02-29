@@ -331,14 +331,12 @@ class Page(dict):
 
         self.html = ""
 
-    def __getattribute__(self, name):
-
+    def __getattr__(self, name):
+        """Attribute-style access to dictionary items."""
         try:
-            return super(Page, self).__getattribute__(name)
-        except AttributeError, e:
-            if name in self:
-                return self[name]
-            raise e
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
 
 # -----------------------------------------------------------------------------
 
