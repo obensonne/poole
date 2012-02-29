@@ -135,7 +135,7 @@ as expressions:
      page.
   2. Everything between `{{` and `}}` are *expressions* and their evaluation is
      going to be part of the final page.
- 
+
 **TIP**: Instead of the outer curly brackets `{` and `}` you can also use
 `<!--` and `-->` to prevent syntax highlighting markdown editors from getting
 confused by the Python code.
@@ -211,7 +211,7 @@ page's *title* attribute:
 
 **TIP:** All items in a page dictionary are exposed as attributes, i.e.
 `page["foobar"]` is identical to `page.foobar`. Dictionary access is useful if
-an item may not be set, e.g.: `page.get("foobar", "...")`. 
+an item may not be set, e.g.: `page.get("foobar", "...")`.
 
 #### Setting page attributes
 
@@ -255,6 +255,37 @@ updates them when loading the `macros` module.
     def something():
         # when executing this, the page and pages objects above are up-to-date
         print page["title"]
+
+### Custom file converters
+
+If you use [LESS][] or [CleverCSS][] you'll be happy about the possibility to
+define custom converters Poole applies to selected files in its building
+process. Custom converters may be defined in `macros.py` using a dictionary
+named 'converter' with file name patterns as keys and a converter function as
+well as a target file name extension as values:
+
+    converter = {
+        r'\.ccss': (ccss_to_css, 'css'),
+        ...
+    }
+
+The converter function `ccss_to_css` must accept the source file name and the
+destination file name as arguments. The destination file name is a suggestion
+(the source filename mapped to the project's output directory with the
+extension given in the converter dictionary) - you are free to choose another
+one:
+
+    import clevercss
+
+    def ccss_to_css(src, dst):
+        # when `src` is '/path/to/project/input/foo.ccss'
+        # then `dst` is '/path/to/project/output/foo.css'
+        ccss = open(src).read()
+        css = clevercss.convert(ccss)
+        open(dst, 'w').write(css)
+
+[clevercss]: http://sandbox.pocoo.org/clevercss/
+[less]: http://lesscss.org/
 
 ### Options and paths
 
@@ -445,37 +476,6 @@ file and adjust for your site:
         fp = open(os.path.join(output, "rss.xml"), 'w')
         fp.write(rss)
         fp.close()
-
-#### Convert CleverCSS to CSS
-
-To convert all [CleverCSS][] files in the `input` directory to regular CSS
-files in the `output` directory, put this into the project's `macros.py`
-(assuming you use `.ccss` as file name extension):
-
-    # -----------------------------------------------------------------------------
-    # convert clevercss files to css
-    # -----------------------------------------------------------------------------
-
-    import clevercss
-    import glob
-    import os.path
-    
-    def hook_preconvert_ccss(): # pre- or post-convert hook, doesn't matter
-        for ccss in glob.glob(os.path.join(input, "**.ccss")):
-            css = ccss[len(input):].lstrip("/")
-            css = "%s.css" % os.path.splitext(css)[0]
-            css = os.path.join(output, css)
-            fpi = open(ccss)
-            fpo = open(css, 'w')
-            fpo.write(clevercss.convert(fpi.read()))
-            fpi.close()
-            fpo.close()
-
-To prevent the original *CCSS* files from getting copied to the output
-directory, use Poole's *--ignore* option:
-`poole.py --build --ignore '^\.|~$|\.ccss$'`.
-
-[clevercss]: http://sandbox.pocoo.org/clevercss/
 
 ## Feedback
 
