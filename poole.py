@@ -29,7 +29,6 @@ import glob
 import imp
 import optparse
 import os
-import os.path
 from os.path import join as opj
 from os.path import exists as opx
 import re
