@@ -451,6 +451,8 @@ def build(project, opts):
 
     pages = []
     page_global = macros.get("page", {})
+    custom_converter = macros.get('converter', {})
+
     for cwd, dirs, files in os.walk(dir_in.decode(opts.filename_enc)):
         cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
         for sdir in dirs[:]:
@@ -465,7 +467,17 @@ def build(project, opts):
                 page = Page(page_global, opj(cwd, f), dir_in, opts)
                 pages.append(page)
             else:
-                shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
+                # either us a custom converter or do a plain copy
+                for patt, (func, ext) in custom_converter.items():
+                    if re.search(patt, f):
+                        f_src = opj(cwd, f)
+                        f_dst = opj(dir_out, cwd_site, f)
+                        f_dst = '%s.%s' % (os.path.splitext(f_dst)[0], ext)
+                        print('info   : convert %s (%s)' % (f_src, func.__name__))
+                        func(f_src, f_dst)
+                        break
+                else:
+                    shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
 
     pages.sort(key=lambda p: int(p.get("sval", "0")))
 
