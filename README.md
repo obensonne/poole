@@ -256,6 +256,32 @@ updates them when loading the `macros` module.
         # when executing this, the page and pages objects above are up-to-date
         print page["title"]
 
+### Options and paths
+
+Similarly to `page` and `pages` the following objects are available within
+embedded Python code and within the *macros* module:
+
+  * **options:** The command line arguments given to Poole as parsed by
+    [Python's optparse module][pyopts]. For instance the base URL can be
+    retrieved by `options.base_url`.
+  * **project:** Path to the project's root directory.
+  * **input:** Path to the project's input directory.
+  * **output:** Path to the project's output directory.
+
+[pyopts]: http://docs.python.org/library/optparse.html
+
+### Character encodings
+
+In case you use non-ASCII characters, check the *encoding* options of Poole. In
+most cases working with non-ASCII strings should work straight forward if the
+options are set properly (default is *UTF-8*).
+
+However, be aware that page variables defined within page source files and
+derived from a page's file name internally are handled as Python *unicode*
+objects. That means if you want to refer to non-ASCII page variable names and
+values form within embedded Python code or from `macros.py`, make sure to use
+*unicode* strings to reference them.
+
 ### Custom file converters
 
 If you use [LESS][] or [CleverCSS][] you'll be happy about the possibility to
@@ -286,32 +312,6 @@ one:
 
 [clevercss]: http://sandbox.pocoo.org/clevercss/
 [less]: http://lesscss.org/
-
-### Options and paths
-
-Similarly to `page` and `pages` the following objects are available within
-embedded Python code and within the *macros* module:
-
-  * **options:** The command line arguments given to Poole as parsed by
-    [Python's optparse module][pyopts]. For instance the base URL can be
-    retrieved by `options.base_url`.
-  * **project:** Path to the project's root directory.
-  * **input:** Path to the project's input directory.
-  * **output:** Path to the project's output directory.
-
-[pyopts]: http://docs.python.org/library/optparse.html
-
-### Character encodings
-
-In case you use non-ASCII characters, check the *encoding* options of Poole. In
-most cases working with non-ASCII strings should work straight forward if the
-options are set properly (default is *UTF-8*).
-
-However, be aware that page variables defined within page source files and
-derived from a page's file name internally are handled as Python *unicode*
-objects. That means if you want to refer to non-ASCII page variable names and
-values form within embedded Python code or from `macros.py`, make sure to use
-*unicode* strings to reference them.
 
 ### Howtos
 
