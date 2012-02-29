@@ -4,6 +4,10 @@
 build/
 dist/
 
+# test files
+tests/actual
+tests/errors.diff
+
 # IDE files:
 .settings
 .project
