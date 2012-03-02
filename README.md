@@ -12,7 +12,10 @@ generation by embedding Python code in page source files. This is a dirty merge
 of content and logic but for simple sites it's a pragmatic way to get things
 done fast and easy -- if you know Python you're ready to start.
 
-See what you get: [example site](http://obensonne.bitbucket.org/).
+Check the list of [sites built with Poole][examples] (and feel free to add
+yours).
+
+[examples]: https://bitbucket.org/obensonne/poole/wiki/Home
 
 [![Flattr this][flattr-img]][flattr-url]
 
