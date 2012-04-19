@@ -49,6 +49,23 @@ except ImportError:
     sys.exit(1)
 
 # =============================================================================
+# Python 2/3 hacks
+# =============================================================================
+
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    import builtins
+    exec_ = getattr(builtins, "exec")
+else:
+    import tempfile
+    def exec_(code, envdic):
+        with tempfile.NamedTemporaryFile() as tf:
+            tf.write(code)
+            tf.flush()
+            execfile(tf.name, envdic)
+
+# =============================================================================
 # init site
 # =============================================================================
 
@@ -396,7 +413,7 @@ def build(project, opts):
         # execute
         sys.stdout = StringIO.StringIO()
         try:
-            exec stmt in macros.copy()
+            exec_(stmt, macros.copy())
         except:
             sys.stdout = sys.__stdout__
             abort_iex(page, "statements", stmt, traceback.format_exc())
