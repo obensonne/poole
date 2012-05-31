@@ -320,7 +320,7 @@ one:
 
 You can do some pretty fancy and useful things with inlined Python code and
 the macros module, for instance generate a list of blog posts or create an RSS
-file -- check out the [example recipes][recipes].
+file. Check out the [example recipes][recipes].
 
 [recipes]: https://bitbucket.org/obensonne/poole/wiki/Recipes
 
