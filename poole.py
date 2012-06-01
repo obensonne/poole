@@ -292,32 +292,49 @@ MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
 class Page(dict):
     """Abstraction of a source page."""
 
+    _template = None # template dictionary
+    _opts = None # command line oiptions
+    _pstrip = None # path prefix to strip from (non-virtual) page file names
+
     _re_eom = re.compile(r'^---+ *\r?\n?$')
     _re_vardef = re.compile(r'^([^\n:=]+?)[:=]((?:.|\n )*)', re.MULTILINE)
     _sec_macros = "macros"
     _modmacs = None
 
-    def __init__(self, templ, fname, strip, opts):
+    def __init__(self, fname, virtual=None, **attrs):
         """Create a new page.
 
-        @param templ: template dictionary
-        @param fname: full path to page input file
-        @param strip: portion of path to strip from `fname` for deployment
-        @param opts: command line options
+        Page content is read from `fname`, except when `virtual` is given (a
+        string representing the raw content of a virtual page).
+
+        The filename refers to the page source file. For virtual pages, this
+        *must* be relative to a projects input directory.
+
+        Virtual pages may contain page attribute definitions similar to real
+        pages. However, it probably is easier to provide the attributes
+        directly. This may be done using arbitrary keyword arguments.
 
         """
         super(Page, self).__init__()
 
-        self.update(templ)
+        self.update(self._template)
+        self.update(attrs)
 
-        self["url"] = re.sub(MKD_PATT, ".html", fname)
-        self["url"] = self["url"][len(strip):].lstrip(os.path.sep)
-        self["url"] = self["url"].replace(os.path.sep, "/")
+        self._virtual = virtual is not None
+
+        fname = opj(self._pstrip, fname) if virtual else fname
 
         self["fname"] = fname
 
-        with codecs.open(fname, 'r', opts.input_enc) as fp:
-            self.raw = fp.readlines()
+        self["url"] = re.sub(MKD_PATT, ".html", fname)
+        self["url"] = self["url"][len(self._pstrip):].lstrip(os.path.sep)
+        self["url"] = self["url"].replace(os.path.sep, "/")
+
+        if virtual:
+            self.raw = virtual
+        else:
+            with codecs.open(fname, 'r', self._opts.input_enc) as fp:
+                self.raw = fp.readlines()
 
         # split raw content into macro definitions and real content
         vardefs = ""
@@ -354,6 +371,10 @@ class Page(dict):
         except KeyError:
             raise AttributeError(name)
 
+    def __str__(self):
+        """Page representation by file name."""
+        return ('%s (virtual)' % self.fname) if self._virtual else self.fname
+
 # -----------------------------------------------------------------------------
 
 def build(project, opts):
@@ -365,7 +386,7 @@ def build(project, opts):
 
     def abort_iex(page, itype, inline, exc):
         """Abort because of an exception in inlined Python code."""
-        print("error  : Python %s in %s failed" % (itype, page.fname))
+        print("error  : Python %s in %s failed" % (itype, page))
         print((" %s raising the exception " % itype).center(79, "-"))
         print(inline)
         print(" exception ".center(79, "-"))
@@ -460,13 +481,16 @@ def build(project, opts):
 
     # "builtin" functions for use in macros and templates
     macros["htmlspecialchars"] = htmlspecialchars
+    macros["Page"] = Page
 
     # -------------------------------------------------------------------------
     # process input files
     # -------------------------------------------------------------------------
 
+    Page._template = macros.get("page", {})
+    Page._opts = opts
+    Page._pstrip = dir_in
     pages = []
-    page_global = macros.get("page", {})
     custom_converter = macros.get('converter', {})
 
     for cwd, dirs, files in os.walk(dir_in.decode(opts.filename_enc)):
@@ -480,10 +504,10 @@ def build(project, opts):
             if re.search(opts.ignore, opj(cwd_site, f)):
                 pass
             elif re.search(MKD_PATT, f):
-                page = Page(page_global, opj(cwd, f), dir_in, opts)
+                page = Page(opj(cwd, f))
                 pages.append(page)
             else:
-                # either us a custom converter or do a plain copy
+                # either use a custom converter or do a plain copy
                 for patt, (func, ext) in custom_converter.items():
                     if re.search(patt, f):
                         f_src = opj(cwd, f)
@@ -513,7 +537,7 @@ def build(project, opts):
 
     for page in pages:
 
-        print("info   : convert %s" % page.fname)
+        print("info   : convert %s" % page)
 
         # replace expressions and statements in page source
         macros["page"] = page
