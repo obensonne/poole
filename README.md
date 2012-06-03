@@ -316,6 +316,44 @@ one:
 [clevercss]: http://sandbox.pocoo.org/clevercss/
 [less]: http://lesscss.org/
 
+### Pre- and post-convert hooks
+
+All pages converted by Poole may be processed by custom code in `macros.py`
+using *hook* functions. In particular, any function whose name starts with
+`hook_preconvert_` is run after source markdown files have been parsed but
+not yet converted. Similarly, any function whose name starts with
+`hook_postconvert_` is run after the content of pages has been converted to
+HTML (but still without the skeleton HTML given in the project's `page.html`
+file).
+
+Pre-convert hooks are useful to preprocess the markdown source and/or to
+generate new virtual pages based on existing real pages:
+
+    def hook_preconvert_foo():
+        # important: replace all foos by bars in every page
+        for p in pages:
+            p.source = p.source.replace("foo", "bar")
+        # create a new virtual page which still has a foo
+        p = Page("foo.md", virtual="The only page with a *foo*.", title="Foony")
+        pages.append(p)
+
+Virtual pages can be created by providing a virtaul source filename relative
+to the project's input folder and corresponding markdown content. Page
+attributes (e.g. `title`) may be given as additional keyword arguments but
+may also be encoded in the markdown source as in real markdown input files.
+
+A common use case for post-convert hooks is to generate full content RSS feeds:
+
+    def hook_postconvert_rss():
+        # this is kind of pseudo code
+        rss = ...
+        for p in pages:
+            rss.add_item(..., r.html)
+        rss.save(".../rss.xml")
+
+More practical and detailed usage examples of hooks and virtual pages can be
+found in the recipes.
+
 ### Recipes
 
 You can do some pretty fancy and useful things with inlined Python code and
