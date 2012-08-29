@@ -349,7 +349,7 @@ class Page(dict):
         for key, val in self._re_vardef.findall(vardefs):
             key = key.strip()
             val = val.strip()
-            val = re.sub(r' *\n +', ' ', val) # clean out line continueation
+            val = re.sub(r' *\n +', ' ', val) # clean out line continuation
             self[key] = val
 
         basename = os.path.basename(fname)

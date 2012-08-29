@@ -93,7 +93,7 @@ will result in an output folder like that:
 ## Page Layout
 
 Every Poole page is based on the skeleton file `page.html`. Hence adjusting the
-site layout means adjusting `page.html` and extending or replacing its CCS file
+site layout means adjusting `page.html` and extending or replacing its CSS file
 `input/poole.css`.
 
 The only thing you should keep in `page.html` are the embedded
@@ -130,7 +130,7 @@ Poole allows you to embed Python code in your pages to *generate* content:
     %}
     Did you know? The sum of 2 and 2 is {{ 2 + 2 }}.
 
-This example demonstrates 2 ways to embed Python code, either as statements or
+This example demonstrates two ways to embed Python code, either as statements or
 as expressions:
 
   1. Everything between `{%` and `%}` are *statements* and whatever is printed
@@ -337,7 +337,7 @@ generate new virtual pages based on existing real pages:
         p = Page("foo.md", virtual="The only page with a *foo*.", title="Foony")
         pages.append(p)
 
-Virtual pages can be created by providing a virtaul source filename relative
+Virtual pages can be created by providing a virtual source filename relative
 to the project's input folder and corresponding markdown content. Page
 attributes (e.g. `title`) may be given as additional keyword arguments but
 may also be encoded in the markdown source as in real markdown input files.
