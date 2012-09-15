@@ -293,7 +293,7 @@ class Page(dict):
     """Abstraction of a source page."""
 
     _template = None # template dictionary
-    _opts = None # command line oiptions
+    _opts = None # command line options
     _pstrip = None # path prefix to strip from (non-virtual) page file names
 
     _re_eom = re.compile(r'^---+ *\r?\n?$')
@@ -349,7 +349,7 @@ class Page(dict):
         for key, val in self._re_vardef.findall(vardefs):
             key = key.strip()
             val = val.strip()
-            val = re.sub(r' *\n +', ' ', val) # clean out line continueation
+            val = re.sub(r' *\n +', ' ', val) # clean out line continuation
             self[key] = val
 
         basename = os.path.basename(fname)
