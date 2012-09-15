@@ -13,4 +13,4 @@ tests/errors.diff
 .project
 .pydevproject
 
-
+.hg/
