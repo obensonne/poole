@@ -166,7 +166,7 @@ opj("input", "blog.md"): """
 menu-position: 10
 ---
 Poole has basic blog support. If an input page's file name has a structure like
-`page-title.YYYY-MM-DD.post-title.md`, e.g. `blog.201010-02-27.read_this.md`,
+`page-title.YYYY-MM-DD.post-title.md`, e.g. `blog.2010-02-27.read_this.md`,
 Poole recognizes the date and post title and sets them as attributes of the
 page. These attributes can then be used to generate a list of blog posts:
 
