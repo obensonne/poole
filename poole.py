@@ -3,7 +3,7 @@
 # =============================================================================
 #
 #    Poole - A damn simple static website generator.
-#    Copyright (C) 2009 Oben Sonne <obensonne@googlemail.com>
+#    Copyright (C) 2012 Oben Sonne <obensonne@googlemail.com>
 #
 #    This file is part of Poole.
 #
