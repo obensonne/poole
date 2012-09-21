@@ -35,7 +35,7 @@ has been tested on Linux but should also work on other Unix systems and Windows
 
 ## Getting Started
 
-Clone oder download ([zip][zip], [tgz][tgz]) the repository and then put
+Clone or download ([zip][zip], [tgz][tgz]) the repository and then put
 *poole.py* to your *PATH*:
 
     $ hg clone http://bitbucket.org/obensonne/poole/ /some/where/poole
