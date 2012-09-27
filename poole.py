@@ -44,7 +44,7 @@ from BaseHTTPServer import HTTPServer
 try:
     import markdown
 except ImportError:
-    print("error: need python-markdown, get it from "
+    print("abort  : need python-markdown, get it from "
           "http://www.freewisdom.org/projects/python-markdown/Installation")
     sys.exit(1)
 
@@ -271,7 +271,7 @@ def init(project):
         os.makedirs(project)
 
     if os.listdir(project):
-        print("error  : project dir %s is not empty, abort" % project)
+        print("abort  : project dir %s is not empty" % project)
         sys.exit(1)
 
     os.mkdir(opj(project, "input"))
@@ -386,7 +386,7 @@ def build(project, opts):
 
     def abort_iex(page, itype, inline, exc):
         """Abort because of an exception in inlined Python code."""
-        print("error  : Python %s in %s failed" % (itype, page))
+        print("abort  : Python %s in %s failed" % (itype, page))
         print((" %s raising the exception " % itype).center(79, "-"))
         print(inline)
         print(" exception ".center(79, "-"))
@@ -456,8 +456,8 @@ def build(project, opts):
     # check required files and folders
     for pelem in (page_html, dir_in, dir_out):
         if not opx(pelem):
-            print("error  : %s does not exist, looks like project has not been "
-                  "initialized, abort" % pelem)
+            print("abort  : %s does not exist, looks like project has not been "
+                  "initialized" % pelem)
             sys.exit(1)
 
     # prepare output directory
@@ -600,7 +600,7 @@ def serve(project, port):
 
     root = opj(project, "output")
     if not os.listdir(project):
-        print("error  : output dir is empty (build project first!), abort")
+        print("abort  : output dir is empty (build project first!)")
         sys.exit(1)
 
     os.chdir(root)
