@@ -517,7 +517,12 @@ def build(project, opts):
                         func(f_src, f_dst)
                         break
                 else:
-                    shutil.copy(opj(cwd, f), opj(dir_out, cwd_site))
+                    src = opj(cwd, f)
+                    try:
+                        shutil.copy(src, opj(dir_out, cwd_site))
+                    except OSError:
+                        # some filesystems like FAT won't allow shutil.copy
+                        shutil.copyfile(src, opj(dir_out, cwd_site, f))
 
     pages.sort(key=lambda p: int(p.get("sval", "0")))
 
