@@ -43,6 +43,9 @@ Clone or download ([zip][zip], [tgz][tgz]) the repository and then put
 
 **TIP**: You might want to add the last command to your `~/.bashrc`.
 
+**Python3**: Download the packages from the *py3* branch ([zip][zip3],
+[tgz][tgz3]) or check out the *py3* branch when cloned.
+
 Create and build a site project:
 
     $ mkdir /path/to/site/project
@@ -59,8 +62,10 @@ starting point.
 
 Run `poole.py --build` whenever you've made some changes in the *input* folder.
 
-[zip]: http://bitbucket.org/obensonne/poole/get/tip.zip
-[tgz]: http://bitbucket.org/obensonne/poole/get/tip.tar.gz
+[zip]: http://bitbucket.org/obensonne/poole/get/default.zip
+[tgz]: http://bitbucket.org/obensonne/poole/get/default.tar.gz
+[zip3]: https://bitbucket.org/obensonne/poole/get/py3.zip
+[tgz3]: http://bitbucket.org/obensonne/poole/get/py3.tar.gz
 
 ## How It Works
 
