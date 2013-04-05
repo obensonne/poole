@@ -22,8 +22,6 @@
 #
 # =============================================================================
 
-from __future__ import with_statement
-
 import codecs
 import glob
 import imp
@@ -33,13 +31,13 @@ from os.path import join as opj
 from os.path import exists as opx
 import re
 import shutil
-import StringIO
+import io
 import sys
 import traceback
-import urlparse
+import urllib.parse
 
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
+from http.server import SimpleHTTPRequestHandler
+from http.server import HTTPServer
 
 try:
     import markdown
@@ -47,6 +45,8 @@ except ImportError:
     print("abort  : need python-markdown, get it from "
           "http://www.freewisdom.org/projects/python-markdown/Installation")
     sys.exit(1)
+
+UTF8 = 'UTF8'
 
 # =============================================================================
 # init site
@@ -57,7 +57,7 @@ EXAMPLE_FILES =  {
 "page.html": """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset={{ htmlspecialchars(__encoding__) }}" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
     <title>poole - {{ htmlspecialchars(page["title"]) }}</title>
     <meta name="description" content="{{ htmlspecialchars(page.get("description", "a poole site")) }}" />
     <meta name="keywords" content="{{ htmlspecialchars(page.get("keywords", "poole")) }}" />
@@ -159,7 +159,7 @@ posts = [p for p in pages if "post" in p] # get all blog post pages
 posts.sort(key=lambda p: p.get("date"), reverse=True) # sort post pages by date
 for p in posts:
     date = datetime.strptime(p.date, "%Y-%m-%d").strftime("%B %d, %Y")
-    print "  * **[%s](%s)** - %s" % (p.post, p.url, date) # markdown list item
+    print("  * **[%s](%s)** - %s" % (p.post, p.url, date)) # markdown list item
 %-->
 
 Have a look into `input/blog.md` to see how it works. Feel free to adjust it
@@ -176,7 +176,7 @@ opj("input", "blog.2010-02-22.Doctors_in_my_penguin.md") : """
 *Posted at
 <!--%
 from datetime import datetime
-print datetime.strptime(page["date"], "%Y-%m-%d").strftime("%B %d, %Y")
+print(datetime.strptime(page["date"], "%Y-%m-%d").strftime("%B %d, %Y"))
 %-->*
 
 There is a bank in my eel, your argument is invalid.
@@ -316,7 +316,7 @@ class Page(dict):
         if virtual:
             self.raw = virtual
         else:
-            with codecs.open(fname, 'r', self._opts.input_enc) as fp:
+            with codecs.open(fname, 'r', UTF8) as fp:
                 self.raw = fp.readlines()
 
         # split raw content into macro definitions and real content
@@ -383,7 +383,7 @@ def build(project, opts):
     regx_escp = re.compile(r'\\((?:(?:&lt;|<)!--|{)(?:{|%))') # escaped code
     repl_escp = r'\1'
     regx_rurl = re.compile(r'(?<=(?:(?:\n| )src|href)=")([^#/&%].*?)(?=")')
-    repl_rurl = lambda m: urlparse.urljoin(opts.base_url, m.group(1))
+    repl_rurl = lambda m: urllib.parse.urljoin(opts.base_url, m.group(1))
 
     regx_eval = re.compile(r'(?<!\\)(?:(?:<!--|{){)(.*?)(?:}(?:-->|}))', re.S)
 
@@ -396,11 +396,7 @@ def build(project, opts):
         except:
             abort_iex(page, "expression", expr, traceback.format_exc())
         else:
-            if not isinstance(repl, basestring): # e.g. numbers
-                repl = unicode(repl)
-            elif not isinstance(repl, unicode):
-                repl = repl.decode("utf-8")
-            return repl
+            return str(repl)
 
     regx_exec = re.compile(r'(?<!\\)(?:(?:<!--|{)%)(.*?)(?:%(?:-->|}))', re.S)
 
@@ -415,17 +411,15 @@ def build(project, opts):
         stmt = ind_rex.sub('', stmt)
 
         # execute
-        sys.stdout = StringIO.StringIO()
+        sys.stdout = io.StringIO()
         try:
-            exec stmt in macros.copy()
+            exec(stmt, macros.copy())
         except:
             sys.stdout = sys.__stdout__
             abort_iex(page, "statements", stmt, traceback.format_exc())
         else:
             repl = sys.stdout.getvalue()[:-1] # remove last line break
             sys.stdout = sys.__stdout__
-            if not isinstance(repl, unicode):
-                repl = repl.decode(opts.input_enc)
             return repl
 
     # -------------------------------------------------------------------------
@@ -456,7 +450,6 @@ def build(project, opts):
     fname = opj(opts.project, "macros.py")
     macros = imp.load_source("macros", fname).__dict__ if opx(fname) else {}
 
-    macros["__encoding__"] = opts.output_enc
     macros["options"] = opts
     macros["project"] = project
     macros["input"] = dir_in
@@ -476,7 +469,7 @@ def build(project, opts):
     pages = []
     custom_converter = macros.get('converter', {})
 
-    for cwd, dirs, files in os.walk(dir_in.decode(opts.filename_enc)):
+    for cwd, dirs, files in os.walk(dir_in):
         cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
         for sdir in dirs[:]:
             if re.search(opts.ignore, opj(cwd_site, sdir)):
@@ -547,7 +540,7 @@ def build(project, opts):
     # render complete HTML pages
     # -------------------------------------------------------------------------
 
-    with codecs.open(opj(project, "page.html"), 'r', opts.input_enc) as fp:
+    with codecs.open(opj(project, "page.html"), 'r', UTF8) as fp:
         skeleton = fp.read()
 
     for page in pages:
@@ -569,7 +562,7 @@ def build(project, opts):
         # write HTML page
         fname = page.fname.replace(dir_in, dir_out)
         fname = re.sub(MKD_PATT, ".html", fname)
-        with codecs.open(fname, 'w', opts.output_enc) as fp:
+        with codecs.open(fname, 'w', UTF8) as fp:
             fp.write(out)
 
     print("success: built project")
@@ -619,12 +612,6 @@ def options():
                   help="input files to ignore (default: '^\.|~$')")
     og.add_option("" , "--md-ext", default=[], metavar="EXT",
                   action="append", help="enable a markdown extension")
-    og.add_option("", "--input-enc", default="utf-8", metavar="ENC",
-                  help="encoding of input pages (default: utf-8)")
-    og.add_option("", "--output-enc", default="utf-8", metavar="ENC",
-                  help="encoding of output pages (default: utf-8)")
-    og.add_option("", "--filename-enc", default="utf-8", metavar="ENC",
-                  help="encoding of file names (default: utf-8)")
     op.add_option_group(og)
 
     og = optparse.OptionGroup(op, "Serve options")

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import codecs
 import os
 import shutil
 import subprocess
@@ -33,7 +32,7 @@ if r != os.EX_OK:
 p = subprocess.Popen(cmd_diff, stdout=subprocess.PIPE)
 diff = p.communicate()[0]
 if diff:
-    with codecs.open(ERRORS, 'w', 'UTF8') as fp:
+    with open(ERRORS, 'wb') as fp:
         fp.write(diff)
     print("failed - see %s for details" % ERRORS)
     sys.exit(1)
