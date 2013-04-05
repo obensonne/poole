@@ -34,7 +34,7 @@ p = subprocess.Popen(cmd_diff, stdout=subprocess.PIPE)
 diff = p.communicate()[0]
 if diff:
     with codecs.open(ERRORS, 'w', 'UTF8') as fp:
-        fp.write(diff)
+        fp.write(diff.decode('UTF8'))
     print("failed - see %s for details" % ERRORS)
     sys.exit(1)
 
