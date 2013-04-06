@@ -101,16 +101,16 @@ Every Poole page is based on the skeleton file `page.html`. Hence adjusting the
 site layout means adjusting `page.html` and extending or replacing its CSS file
 `input/poole.css`.
 
-The only thing you should keep in `page.html` are the embedded
-{{\_\_content\_\_}} and {{\_\_encoding\_\_}} expressions.  Below is an almost
-minimal `page.html` file. It does not look nice but it's a clean starting point
-to build your own layout from scratch.
+The only thing you should keep in `page.html` is the embedded
+{{\_\_content\_\_}} expression.  Below is an almost minimal `page.html` file.
+It does not look nice but it's a clean starting point to build your own layout
+from scratch.
 
 Minimal `page.html`:
 
     <html>
       <head>
-        <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
       </head>
       <body>
         {{ __content__ }}
