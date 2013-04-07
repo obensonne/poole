@@ -5,4 +5,3 @@ syntax: regexp
 ~$
 ^.project$
 ^.pydevproject$
-^py3env$
