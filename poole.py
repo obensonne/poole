@@ -49,6 +49,16 @@ except ImportError:
           "http://www.freewisdom.org/projects/python-markdown/Installation")
     sys.exit(1)
 
+HERE = os.path.dirname(os.path.realpath(__file__))
+
+THEME_DIR = opj(HERE, 'themes')
+
+THEME_NAMES = ['minimal'] + [
+    os.path.basename(x)
+    for x in glob.glob(opj(THEME_DIR, '*'))
+    if os.path.isdir(x)
+]
+
 # =============================================================================
 # init site
 # =============================================================================
@@ -62,7 +72,50 @@ EXAMPLE_FILES =  {
     <title>poole - {{ htmlspecialchars(page["title"]) }}</title>
     <meta name="description" content="{{ htmlspecialchars(page.get("description", "a poole site")) }}" />
     <meta name="keywords" content="{{ htmlspecialchars(page.get("keywords", "poole")) }}" />
-    <link rel="stylesheet" type="text/css" href="poole.css" />
+    <style type="text/css">
+        body {
+            font-family: sans;
+            width: 800px;
+            margin: 1em auto;
+            color: #2e3436;
+        }
+        div#box {
+        }
+        div#header, div#menu, div#content, div#footer {
+            padding: 1em;
+        }
+        div#menu {
+            background-color: #eeeeec;
+            padding: 0.6em 0 0.6em 0;
+        }
+        #menu span {
+            font-weight: bold;
+            padding: 0.6em;
+        }
+        #menu span.current {
+            background-color: #ffffff;
+            border: 1px solid #eeeeec;
+        }
+        #menu a {
+            color: #000000;
+            text-decoration: none;
+        }
+        div#footer {
+            color: gray;
+            text-align: center;
+            font-size: small;
+        }
+        div#footer a {
+            color: gray;
+            text-decoration: none;
+        }
+        pre {
+            border: dotted black 1px;
+            background: #eeeeec;
+            font-size: small;
+            padding: 1em;
+        }
+    </style>
 </head>
 <body>
     <div id="box">
@@ -140,10 +193,8 @@ opj("input", "layout.md"): """
 menu-position: 3
 ---
 Every page of a poole site is based on *one global template file*, `page.html`.
-All you need to adjust the site layout is to
-
- * edit the page template `page.html` and
- * extend or edit the style file `input/poole.css`.
+All you need to adjust the site layout is to edit the page template
+`page.html`.
 """,
 
 opj("input", "blog.md"): """
@@ -169,7 +220,7 @@ to your needs.
 
 # -----------------------------------------------------------------------------
 
-opj("input", "blog.2010-02-22.Doctors_in_my_penguin.md") : """
+opj("input", "blog.2013-04-08.Lorem_Ipsum.md") : """
 
 ---
 ## {{ page["post"] }}
@@ -180,9 +231,20 @@ from datetime import datetime
 print datetime.strptime(page["date"], "%Y-%m-%d").strftime("%B %d, %Y")
 %-->*
 
-There is a bank in my eel, your argument is invalid.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sed pretium arcu.
+Nullam eu leo ut justo egestas condimentum sed id dolor. In suscipit est eu
+tellus lacinia congue. Nunc tincidunt posuere nibh vitae accumsan. Suspendisse
+quis justo quis nulla rhoncus venenatis. Cum sociis natoque penatibus et magnis
+dis parturient montes, nascetur ridiculus mus. Suspendisse potenti.
 
-More nonsense at <http://automeme.net/>.
+Nullam luctus tortor ac libero eleifend interdum nec eget dolor. Aliquam quis
+massa metus, id fringilla odio. Fusce lobortis sollicitudin gravida. Donec
+porttitor metus aliquam diam consectetur vitae tristique ligula aliquet. Nulla
+facilisi. Mauris eleifend erat id velit eleifend facilisis. Proin orci lacus,
+imperdiet eu mollis ac, cursus sit amet ligula. Ut id neque urna, sed dignissim
+urna. Cras sit amet sodales orci. In at lacus dui. Duis mi neque, posuere ut
+congue non, ornare a magna. Fusce massa ligula, vestibulum sed vulputate quis,
+sodales at massa.
 
 No-ASCII characters like `öäüß` are no problems as long as input files are
 encoded in UTF8.
@@ -190,68 +252,41 @@ encoded in UTF8.
 
 # -----------------------------------------------------------------------------
 
-opj("input", "blog.2010-03-01.I_ate_all the pokemans.md"): """
+opj("input", "blog.2013-04-01.Holy_Grail.md"): """
 
 ## {{ page["post"] }}
 
 *Posted at <!--{ page["date"] }-->.*
 
-What *are* interior crocodile alligators? We just don't know.
+Knights of Ni, we are but simple travelers who seek the enchanter who lives
+beyond these woods. A newt? Did you dress her up like this? On second thoughts,
+let's not go there. It is a silly place. You don't vote for kings. Knights of
+Ni, we are but simple travelers who seek the enchanter who lives beyond these
+woods.
 
-More nonsense at <http://automeme.net/>.
+### Bridgekeeper ###
+
+Camelot! What do you mean? And this isn't my nose. This is a false one. Ah, now
+we see the violence inherent in the system!
+
+You don't frighten us, English pig-dogs! Go and boil your bottoms, sons of a
+silly person! I blow my nose at you, so-called Ah-thoor Keeng, you and all your
+silly English K-n-n-n-n-n-n-n-niggits! I don't want to talk to you no more, you
+empty-headed animal food trough water! I fart in your general direction! Your
+mother was a hamster and your father smelt of elderberries! Now leave before I
+am forced to taunt you a second time! Shh! Knights, I bid you welcome to your
+new home. Let us ride to Camelot! Now, look here, my good man.
+
+### What a strange ###
+
+She looks like one. Why do you think that she is a witch? Look, my liege! Bring
+her forward!
+
+[Ni!](http://chrisvalleskey.com/fillerama/)
 """,
-
-# -----------------------------------------------------------------------------
-
-opj("input", "poole.css"): """
-body {
-    font-family: sans;
-    width: 800px;
-    margin: 1em auto;
-    color: #2e3436;
-}
-div#box {
-    border: solid #2e3436 1px;
-}
-div#header, div#menu, div#content, div#footer {
-    padding: 1em;
-}
-div#menu {
-    background-color: #2e3436;
-    padding: 0.6em 0 0.6em 0;
-}
-#menu span {
-    background-color: #2e3436;
-    font-weight: bold;
-    padding: 0.6em;
-}
-#menu span.current {
-    background-color: #555753;
-}
-#menu a {
-    color: #fefefc;
-    text-decoration: none;
-}
-div#footer {
-    color: gray;
-    text-align: center;
-    font-size: small;
-}
-div#footer a {
-    color: gray;
-    text-decoration: none;
-}
-pre {
-    border: dotted black 1px;
-    background: #eeeeec;
-    font-size: small;
-    padding: 1em;
 }
 
-"""
-}
-
-def init(project):
+def init(project, theme):
     """Initialize a site project."""
 
     if not opx(project):
@@ -261,12 +296,27 @@ def init(project):
         print("abort  : project dir %s is not empty" % project)
         sys.exit(1)
 
-    os.mkdir(opj(project, "input"))
-    os.mkdir(opj(project, "output"))
+    dir_in = opj(project, "input")
+    dir_out = opj(project, "output")
+
+    os.mkdir(dir_in)
+    os.mkdir(dir_out)
 
     for fname, content in EXAMPLE_FILES.items():
+        print('info: create example %r' % fname)
         with open(opj(project, fname), 'w') as fp:
             fp.write(content)
+
+    if theme != 'minimal':
+        shutil.copy(opj(THEME_DIR, theme, 'page.html'), project)
+        for fname in glob.glob(opj(THEME_DIR, theme, '*')):
+            print('info: copy theme data %r' % fname)
+            if os.path.basename(fname) == 'page.html':
+                continue
+            if os.path.isdir(fname):
+                shutil.copytree(fname, opj(dir_in, os.path.basename(fname)))
+            else:
+                shutil.copy(fname, dir_in)
 
     print("success: initialized project")
 
@@ -601,7 +651,7 @@ def serve(project, port):
 def options():
     """Parse and validate command line arguments."""
 
-    usage = ("Usage: %prog --init [path/to/project]\n"
+    usage = ("Usage: %prog --init  [OPTIONS] [path/to/project]\n"
              "       %prog --build [OPTIONS] [path/to/project]\n"
              "       %prog --serve [OPTIONS] [path/to/project]\n"
              "\n"
@@ -615,6 +665,12 @@ def options():
                   help="build project")
     op.add_option("-s" , "--serve", action="store_true", default=False,
                   help="serve project")
+
+    og = optparse.OptionGroup(op, "Init options")
+    og.add_option("", "--theme", type="choice", default="minimal",
+                  choices=THEME_NAMES,
+                  help="theme for a new project (choices: %s)" % ', '.join(THEME_NAMES))
+    op.add_option_group(og)
 
     og = optparse.OptionGroup(op, "Build options")
     og.add_option("", "--base-url", default="/", metavar="URL",
@@ -682,7 +738,7 @@ def main():
     opts = options()
 
     if opts.init:
-        init(opts.project)
+        init(opts.project, opts.theme)
     if opts.build:
         build(opts.project, opts)
     if opts.serve:
