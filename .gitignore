@@ -8,6 +8,10 @@ dist/
 tests/actual
 tests/errors.diff
 
+# misc
+box/
+SNAPSHOT*
+
 # IDE files:
 .settings
 .project
