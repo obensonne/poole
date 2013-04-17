@@ -180,12 +180,13 @@ your macros.py).
 
 Currently, there is only one builtin macro available.
 
-`htmlspecialchars(s)`
+`hx(s)`
 
 > Replace the characters that are special within HTML (`&`, `<`, `>` and `"`)
 > with their equivalent character entity (e.g., `&amp;`). This should be
 > called whenever an arbitrary string is inserted into HTML (i.e. use
-> `{{ htmlspecialchars(variable) }}` instead of `{{ variable }}`).
+> `{{ hx(variable) }}` instead of `{{ variable }}`). You do not need this
+> within a markdown context.
 >
 > Note that `"` is not special in most HTML, only within attributes.
 > However, since escaping it does not hurt within normal HTML, it is

@@ -68,10 +68,10 @@ EXAMPLE_FILES =  {
 "page.html": """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset={{ htmlspecialchars(__encoding__) }}" />
-    <title>poole - {{ htmlspecialchars(page["title"]) }}</title>
-    <meta name="description" content="{{ htmlspecialchars(page.get("description", "a poole site")) }}" />
-    <meta name="keywords" content="{{ htmlspecialchars(page.get("keywords", "poole")) }}" />
+    <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
+    <title>poole - {{ hx(page["title"]) }}</title>
+    <meta name="description" content="{{ hx(page.get("description", "a poole site")) }}" />
+    <meta name="keywords" content="{{ hx(page.get("keywords", "poole")) }}" />
     <style type="text/css">
         body {
             font-family: sans;
@@ -121,7 +121,7 @@ EXAMPLE_FILES =  {
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{{ htmlspecialchars(page["title"]) }}</h2>
+         <h2>{{ hx(page["title"]) }}</h2>
     </div>
     <div id="menu">
     <!--%
@@ -129,8 +129,8 @@ EXAMPLE_FILES =  {
         mpages.sort(key=lambda p: int(p["menu-position"]))
         entry = '<span class="%s"><a href="%s">%s</a></span>'
         for p in mpages:
-            style = p["title"] == page["title"] and "current" or ""
-            print(entry % (style, htmlspecialchars(p["url"]), htmlspecialchars(p["title"])))
+            style = "current" if p["title"] == page["title"] else ""
+            print(entry % (style, p["url"], hx(p["title"])))
     %-->
     </div>
     <div id="content">{{ __content__ }}</div>
@@ -326,6 +326,28 @@ def init(project, theme):
 
 MKD_PATT = r'\.(?:md|mkd|mdown|markdown)$'
 
+def hx(s):
+    """
+    Replace the characters that are special within HTML (&, <, > and ")
+    with their equivalent character entity (e.g., &amp;). This should be
+    called whenever an arbitrary string is inserted into HTML (so in most
+    places where you use {{ variable }} in your templates).
+
+    Note that " is not special in most HTML, only within attributes.
+    However, since escaping it does not hurt within normal HTML, it is
+    just escaped unconditionally.
+    """
+    if getattr(s, 'escaped', False):
+        return s
+
+    escape = {
+        "&": "&amp;",
+        '"': "&quot;",
+        ">": "&gt;",
+        "<": "&lt;",
+    }
+    return ''.join(escape.get(c, c) for c in s)
+
 class Page(dict):
     """Abstraction of a source page."""
 
@@ -516,8 +538,9 @@ def build(project, opts):
     macros["input"] = dir_in
     macros["output"] = dir_out
 
-    # "builtin" functions for use in macros and templates
-    macros["htmlspecialchars"] = htmlspecialchars
+    # "builtin" items for use in macros and templates
+    macros["hx"] = hx
+    macros["htmlspecialchars"] = hx # legacy name of `htmlx` function
     macros["Page"] = Page
 
     # -------------------------------------------------------------------------
@@ -702,32 +725,6 @@ def options():
     opts.project = args and args[0] or "."
 
     return opts
-
-# =============================================================================
-# template helper functions
-# =============================================================================
-
-def htmlspecialchars(s):
-    """
-    Replace the characters that are special within HTML (&, <, > and ")
-    with their equivalent character entity (e.g., &amp;). This should be
-    called whenever an arbitrary string is inserted into HTML (so in most
-    places where you use {{ variable }} in your templates).
-
-    Note that " is not special in most HTML, only within attributes.
-    However, since escaping it does not hurt within normal HTML, it is
-    just escaped unconditionally.
-    """
-    escape = {
-        "&": "&amp;",
-        '"': "&quot;",
-        ">": "&gt;",
-        "<": "&lt;",
-    }
-
-    # Look up the translation for every character in s (defaulting to
-    # the character itself if no translation is available).
-    return ''.join([escape.get(c,c) for c in s])
 
 # =============================================================================
 # main
