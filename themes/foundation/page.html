@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--[if IE 8]>
+<html class="no-js lt-ie9" lang="en" >
+<![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="en" >
+<!--<![endif]-->
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>{{ hx(page["title"]) }}</title>
+  <link rel="stylesheet" href="css/normalize.css" />
+  <link rel="stylesheet" href="css/foundation.css" />
+  <link href='css/custom.css' rel='stylesheet' type='text/css'>
+  <script src="js/vendor/custom.modernizr.js"></script>
+</head>
+<body>
+
+  <div id="wrap"> <!-- only purpose of this div: sticky footer -->
+
+    <!-- Navigation -->
+    <nav class="top-bar">
+      <ul class="title-area">
+        <li class="name">
+          <h1>
+            <a href="#">Poole</a>
+          </h1>
+        </li>
+        <li class="toggle-topbar menu-icon"><a href="#"><span>menu</span></a></li>
+      </ul>
+      <section class="top-bar-section">
+        <ul class="right">
+          <li class="divider"></li>
+          {%
+            mpages = [p for p in pages if "menu-position" in p]
+            mpages.sort(key=lambda p: int(p["menu-position"]))
+            entry = '<li class="%s"><a href="%s">%s</a></li>'
+            for p in mpages:
+                style = p["title"] == page["title"] and "active" or ""
+                print(entry % (style, p["url"], hx(p["title"])))
+          %}
+          <li class="divider"></li>
+          <li class="has-dropdown"><a href="#">Poole</a>
+            <ul class="dropdown">
+              <li><a href="https://bitbucket.org/obensonne/poole">Website</a></li>
+              <li><a href="https://bitbucket.org/obensonne/poole/wiki/Recipes">Recipes</a></li>
+              <li><a href="https://bitbucket.org/obensonne/poole/wiki/Themes">Themes</a></li>
+              <li class="divider"></li>
+              <li><a href="https://news.ycombinator.com/item?id=4857473">Alternatives</a></li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+    </nav>
+
+    <!-- Headline -->
+    <div class="row page-header">
+      <div class="large-12 columns">
+        <h1>{{ hx(page["title"]) }}</h1>
+      </div>
+      <hr />
+    </div>
+
+    <!-- Content -->
+    <div class="row">
+      <div class="large-12 columns">{{ __content__ }}</div>
+    </div>
+
+    <div id="push"></div> <!-- push footer down -->
+  </div> <!-- wrap -->
+
+  <!-- Footer -->
+  <hr />
+  <footer class="row">
+    <div class="large-12 columns">
+      <div class="row">
+
+        <p class="text-center">
+          <small>
+          Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>
+          &middot;
+          Using <a href="http://jquery.com">jQuery</a> and
+          <a href="http://foundation.zurb.com/">Foundation</a>
+          &middot;
+          Licensed as <a href="http://creativecommons.org/licenses/by-sa/3.0">CC-SA</a>
+          &middot;
+          <a href="http://validator.w3.org/check?uri=referer">Validate me</a>
+          </small>
+        </p>
+
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    document.write('<script src='
+        + ('__proto__' in {} ? 'js/vendor/zepto'
+            : 'js/vendor/jquery') + '.js><\/script>')
+  </script>
+  <script src="js/foundation.min.js"></script>
+  <!-- foundation extras - uncomment as needed:
+  <script src="js/foundation/foundation.js"></script>
+  <script src="js/foundation/foundation.alerts.js"></script>
+  <script src="js/foundation/foundation.clearing.js"></script>
+  <script src="js/foundation/foundation.cookie.js"></script>
+  <script src="js/foundation/foundation.dropdown.js"></script>
+  <script src="js/foundation/foundation.forms.js"></script>
+  <script src="js/foundation/foundation.joyride.js"></script>
+  <script src="js/foundation/foundation.magellan.js"></script>
+  <script src="js/foundation/foundation.orbit.js"></script>
+  <script src="js/foundation/foundation.placeholder.js"></script>
+  <script src="js/foundation/foundation.reveal.js"></script>
+  <script src="js/foundation/foundation.section.js"></script>
+  <script src="js/foundation/foundation.tooltips.js"></script>
+  <script src="js/foundation/foundation.topbar.js"></script>
+  -->
+  <script>
+    $(document).foundation();
+  </script>
+</body>
+</html>
