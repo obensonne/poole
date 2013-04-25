@@ -1,17 +1,60 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset={{ htmlspecialchars(__encoding__) }}" />
-    <title>poole - {{ htmlspecialchars(page["title"]) }}</title>
-    <meta name="description" content="{{ htmlspecialchars(page.get("description", "a poole site")) }}" />
-    <meta name="keywords" content="{{ htmlspecialchars(page.get("keywords", "poole")) }}" />
-    <link rel="stylesheet" type="text/css" href="poole.css" />
+    <meta http-equiv="Content-Type" content="text/html; charset={{ __encoding__ }}" />
+    <title>poole - {{ hx(page["title"]) }}</title>
+    <meta name="description" content="{{ hx(page.get("description", "a poole site")) }}" />
+    <meta name="keywords" content="{{ hx(page.get("keywords", "poole")) }}" />
+    <style type="text/css">
+        body {
+            font-family: sans;
+            width: 800px;
+            margin: 1em auto;
+            color: #2e3436;
+        }
+        div#box {
+        }
+        div#header, div#menu, div#content, div#footer {
+            padding: 1em;
+        }
+        div#menu {
+            background-color: #eeeeec;
+            padding: 0.6em 0 0.6em 0;
+        }
+        #menu span {
+            font-weight: bold;
+            padding: 0.6em;
+        }
+        #menu span.current {
+            background-color: #ffffff;
+            border: 1px solid #eeeeec;
+        }
+        #menu a {
+            color: #000000;
+            text-decoration: none;
+        }
+        div#footer {
+            color: gray;
+            text-align: center;
+            font-size: small;
+        }
+        div#footer a {
+            color: gray;
+            text-decoration: none;
+        }
+        pre {
+            border: dotted black 1px;
+            background: #eeeeec;
+            font-size: small;
+            padding: 1em;
+        }
+    </style>
 </head>
 <body>
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{{ htmlspecialchars(page["title"]) }}</h2>
+         <h2>{{ hx(page["title"]) }}</h2>
     </div>
     <div id="menu">
     <!--%
@@ -19,8 +62,8 @@
         mpages.sort(key=lambda p: int(p["menu-position"]))
         entry = '<span class="%s"><a href="%s">%s</a></span>'
         for p in mpages:
-            style = p["title"] == page["title"] and "current" or ""
-            print(entry % (style, htmlspecialchars(p["url"]), htmlspecialchars(p["title"])))
+            style = "current" if p["title"] == page["title"] else ""
+            print(entry % (style, p["url"], hx(p["title"])))
     %-->
     </div>
     <div id="content">{{ __content__ }}</div>

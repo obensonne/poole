@@ -5,7 +5,50 @@
     <title>poole - layout</title>
     <meta name="description" content="a poole site" />
     <meta name="keywords" content="poole" />
-    <link rel="stylesheet" type="text/css" href="/poole.css" />
+    <style type="text/css">
+        body {
+            font-family: sans;
+            width: 800px;
+            margin: 1em auto;
+            color: #2e3436;
+        }
+        div#box {
+        }
+        div#header, div#menu, div#content, div#footer {
+            padding: 1em;
+        }
+        div#menu {
+            background-color: #eeeeec;
+            padding: 0.6em 0 0.6em 0;
+        }
+        #menu span {
+            font-weight: bold;
+            padding: 0.6em;
+        }
+        #menu span.current {
+            background-color: #ffffff;
+            border: 1px solid #eeeeec;
+        }
+        #menu a {
+            color: #000000;
+            text-decoration: none;
+        }
+        div#footer {
+            color: gray;
+            text-align: center;
+            font-size: small;
+        }
+        div#footer a {
+            color: gray;
+            text-decoration: none;
+        }
+        pre {
+            border: dotted black 1px;
+            background: #eeeeec;
+            font-size: small;
+            padding: 1em;
+        }
+    </style>
 </head>
 <body>
     <div id="box">
@@ -20,11 +63,8 @@
 <span class=""><a href="/blog.html">blog</a></span>
     </div>
     <div id="content"><p>Every page of a poole site is based on <em>one global template file</em>, <code>page.html</code>.
-All you need to adjust the site layout is to</p>
-<ul>
-<li>edit the page template <code>page.html</code> and</li>
-<li>extend or edit the style file <code>input/poole.css</code>.</li>
-</ul></div>
+All you need to adjust the site layout is to edit the page template
+<code>page.html</code>.</p></div>
     </div>
     <div id="footer">
         Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>
