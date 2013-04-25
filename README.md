@@ -50,15 +50,15 @@ Create and build a site project:
 
     $ mkdir /path/to/site/project
     $ cd /path/to/site/project
-    $ poole.py --init
+    $ poole.py --init --theme minimal
     $ poole.py --build
     $ poole.py --serve
 
 Done. You've just created a website! Browse <http://localhost:8080/> and watch
-the example pages which have been created during initialization.
+the example pages which have been created during initialization. To write your
+own pages, use the example pages in the *input* folder as a starting point.
 
-To write your own pages, use the example pages in the *input* folder as a
-starting point.
+Next to the *miniaml* theme, there are some other [choices available][themes].
 
 Run `poole.py --build` whenever you've made some changes in the *input* folder.
 
@@ -66,6 +66,7 @@ Run `poole.py --build` whenever you've made some changes in the *input* folder.
 [tgz]: http://bitbucket.org/obensonne/poole/get/default.tar.gz
 [zip3]: https://bitbucket.org/obensonne/poole/get/py3.zip
 [tgz3]: http://bitbucket.org/obensonne/poole/get/py3.tar.gz
+[themes]: https://bitbucket.org/obensonne/poole/wiki/Themes
 
 ## How It Works
 
@@ -180,12 +181,13 @@ your macros.py).
 
 Currently, there is only one builtin macro available.
 
-`htmlspecialchars(s)`
+`hx(s)`
 
 > Replace the characters that are special within HTML (`&`, `<`, `>` and `"`)
 > with their equivalent character entity (e.g., `&amp;`). This should be
 > called whenever an arbitrary string is inserted into HTML (i.e. use
-> `{{ htmlspecialchars(variable) }}` instead of `{{ variable }}`).
+> `{{ hx(variable) }}` instead of `{{ variable }}`). You do not need this
+> within a markdown context.
 >
 > Note that `"` is not special in most HTML, only within attributes.
 > However, since escaping it does not hurt within normal HTML, it is

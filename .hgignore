@@ -1,7 +1,10 @@
-syntax: regexp
-^tests/actual$
-^tests/errors.diff$
-\.pyc$
-~$
-^.project$
-^.pydevproject$
+syntax: glob
+tests/actual
+tests/errors.diff
+*.pyc
+*~
+.project
+.pydevproject
+box
+SNAPSHOT*
+.settings

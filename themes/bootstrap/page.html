@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ hx(page["title"]) }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ hx(page.get('description', '')) }}">
+    <meta name="keywords" content="{{ hx(page.get('keywords', '')) }}" />
+    <!-- css -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href='css/custom.css' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+  
+    <div id="wrap"> <!-- only purpose of this div: sticky footer -->
+  
+      <!-- header -->
+      <div class="navbar navbar-static-top">
+        <div class="navbar-inner">
+          <div class="container">
+            <!-- responsive menu for small screens -->
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </a>
+            <!-- regular menu -->
+            <a class="brand" href="#">Poole</a>
+            <div class="nav-collapse collapse">
+              <ul class="nav pull-right">
+              <!--%
+                  mpages = [p for p in pages if "menu-position" in p]
+                  mpages.sort(key=lambda p: int(p["menu-position"]))
+                  entry = '<li class="%s"><a href="%s">%s</a></li>'
+                  for p in mpages:
+                      style = p["title"] == page["title"] and "active" or ""
+                      print(entry % (style, p["url"], hx(p["title"])))
+              %-->
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Poole <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href="https://bitbucket.org/obensonne/poole">Website</a></li>
+                  <li><a href="https://bitbucket.org/obensonne/poole/wiki/Recipes">Recipes</a></li>
+                  <li><a href="https://bitbucket.org/obensonne/poole/wiki/Themes">Themes</a></li>
+                  <li class="divider"></li>
+                  <li><a href="https://news.ycombinator.com/item?id=4857473">Alternatives</a></li>
+                </ul>
+              </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- content -->
+      <div class="container">
+        <div class=page-header>
+          <h1>
+            {{ hx(page["title"]) }}
+          </h1>
+        </div>
+        <div class="row">
+          <div class="span12">
+            {{ __content__ }}
+          </div>
+        </div>
+      </div>
+      
+      <div id="push"></div> <!-- push footer down -->
+    </div> <!-- wrap -->
+    
+    <!-- footer -->
+    <hr/>
+    <div class="container">
+      <div class="row">
+        <p class="span12 text-center">
+          <small>
+          Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>
+          &middot;
+          Using <a href="http://jquery.com">jQuery</a> and
+          <a href="http://twitter.github.io/bootstrap">Bootstrap</a>
+          &middot;
+          Licensed as <a href="http://creativecommons.org/licenses/by-sa/3.0">CC-SA</a>
+          &middot;
+          <a href="http://validator.w3.org/check?uri=referer">Validate me</a>
+          </small>
+        </p>
+      </div>
+    </div>
+
+    <!-- js -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+  </body>
+</html>

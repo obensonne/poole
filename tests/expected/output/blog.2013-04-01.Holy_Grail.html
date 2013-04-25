@@ -2,9 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
-    <title>poole - {{ hx(page["title"]) }}</title>
-    <meta name="description" content="{{ hx(page.get("description", "a poole site")) }}" />
-    <meta name="keywords" content="{{ hx(page.get("keywords", "poole")) }}" />
+    <title>poole - blog</title>
+    <meta name="description" content="a poole site" />
+    <meta name="keywords" content="poole" />
     <style type="text/css">
         body {
             font-family: sans;
@@ -54,19 +54,35 @@
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{{ hx(page["title"]) }}</h2>
+         <h2>blog</h2>
     </div>
     <div id="menu">
-    <!--%
-        mpages = [p for p in pages if "menu-position" in p]
-        mpages.sort(key=lambda p: int(p["menu-position"]))
-        entry = '<span class="%s"><a href="%s">%s</a></span>'
-        for p in mpages:
-            style = "current" if p["title"] == page["title"] else ""
-            print(entry % (style, p["url"], hx(p["title"])))
-    %-->
+    <span class=""><a href="/index.html">home</a></span>
+<span class=""><a href="/layout.html">layout</a></span>
+<span class=""><a href="/logic.html">logic</a></span>
+<span class="current"><a href="/blog.html">blog</a></span>
     </div>
-    <div id="content">{{ __content__ }}</div>
+    <div id="content"><h2>Holy Grail</h2>
+<p><em>Posted at 2013-04-01.</em></p>
+<p>Knights of Ni, we are but simple travelers who seek the enchanter who lives
+beyond these woods. A newt? Did you dress her up like this? On second thoughts,
+let's not go there. It is a silly place. You don't vote for kings. Knights of
+Ni, we are but simple travelers who seek the enchanter who lives beyond these
+woods.</p>
+<h3>Bridgekeeper</h3>
+<p>Camelot! What do you mean? And this isn't my nose. This is a false one. Ah, now
+we see the violence inherent in the system!</p>
+<p>You don't frighten us, English pig-dogs! Go and boil your bottoms, sons of a
+silly person! I blow my nose at you, so-called Ah-thoor Keeng, you and all your
+silly English K-n-n-n-n-n-n-n-niggits! I don't want to talk to you no more, you
+empty-headed animal food trough water! I fart in your general direction! Your
+mother was a hamster and your father smelt of elderberries! Now leave before I
+am forced to taunt you a second time! Shh! Knights, I bid you welcome to your
+new home. Let us ride to Camelot! Now, look here, my good man.</p>
+<h3>What a strange</h3>
+<p>She looks like one. Why do you think that she is a witch? Look, my liege! Bring
+her forward!</p>
+<p><a href="http://chrisvalleskey.com/fillerama/">Ni!</a></p></div>
     </div>
     <div id="footer">
         Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>

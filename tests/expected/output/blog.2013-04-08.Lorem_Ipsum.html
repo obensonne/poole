@@ -2,9 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
-    <title>poole - {{ hx(page["title"]) }}</title>
-    <meta name="description" content="{{ hx(page.get("description", "a poole site")) }}" />
-    <meta name="keywords" content="{{ hx(page.get("keywords", "poole")) }}" />
+    <title>poole - blog</title>
+    <meta name="description" content="a poole site" />
+    <meta name="keywords" content="poole" />
     <style type="text/css">
         body {
             font-family: sans;
@@ -54,19 +54,32 @@
     <div id="box">
     <div id="header">
          <h1>a poole site</h1>
-         <h2>{{ hx(page["title"]) }}</h2>
+         <h2>blog</h2>
     </div>
     <div id="menu">
-    <!--%
-        mpages = [p for p in pages if "menu-position" in p]
-        mpages.sort(key=lambda p: int(p["menu-position"]))
-        entry = '<span class="%s"><a href="%s">%s</a></span>'
-        for p in mpages:
-            style = "current" if p["title"] == page["title"] else ""
-            print(entry % (style, p["url"], hx(p["title"])))
-    %-->
+    <span class=""><a href="/index.html">home</a></span>
+<span class=""><a href="/layout.html">layout</a></span>
+<span class=""><a href="/logic.html">logic</a></span>
+<span class="current"><a href="/blog.html">blog</a></span>
     </div>
-    <div id="content">{{ __content__ }}</div>
+    <div id="content"><h2>Lorem Ipsum</h2>
+<p><em>Posted at
+April 08, 2013</em></p>
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sed pretium arcu.
+Nullam eu leo ut justo egestas condimentum sed id dolor. In suscipit est eu
+tellus lacinia congue. Nunc tincidunt posuere nibh vitae accumsan. Suspendisse
+quis justo quis nulla rhoncus venenatis. Cum sociis natoque penatibus et magnis
+dis parturient montes, nascetur ridiculus mus. Suspendisse potenti.</p>
+<p>Nullam luctus tortor ac libero eleifend interdum nec eget dolor. Aliquam quis
+massa metus, id fringilla odio. Fusce lobortis sollicitudin gravida. Donec
+porttitor metus aliquam diam consectetur vitae tristique ligula aliquet. Nulla
+facilisi. Mauris eleifend erat id velit eleifend facilisis. Proin orci lacus,
+imperdiet eu mollis ac, cursus sit amet ligula. Ut id neque urna, sed dignissim
+urna. Cras sit amet sodales orci. In at lacus dui. Duis mi neque, posuere ut
+congue non, ornare a magna. Fusce massa ligula, vestibulum sed vulputate quis,
+sodales at massa.</p>
+<p>No-ASCII characters like <code>öäüß</code> are no problems as long as input files are
+encoded in UTF8.</p></div>
     </div>
     <div id="footer">
         Built with <a href="http://bitbucket.org/obensonne/poole">Poole</a>
