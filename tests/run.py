@@ -12,6 +12,8 @@ ACTUAL = os.path.join(HERE, "actual")
 EXPECTED = os.path.join(HERE, "expected")
 ERRORS = os.path.join(HERE, "errors.diff")
 
+EX_OK = getattr(os, "EX_OK", 0)
+
 if os.path.exists(ACTUAL):
     shutil.rmtree(ACTUAL)
 
@@ -23,11 +25,11 @@ cmd_build = [POOLE, ACTUAL, "--build"]
 cmd_diff = ["diff", "-Naur", EXPECTED, ACTUAL]
 
 r = subprocess.call(cmd_init, stdout=subprocess.PIPE)
-if r != os.EX_OK:
+if r != EX_OK:
     sys.exit(1)
 
 r = subprocess.call(cmd_build, stdout=subprocess.PIPE)
-if r != os.EX_OK:
+if r != EX_OK:
     sys.exit(1)
 
 p = subprocess.Popen(cmd_diff, stdout=subprocess.PIPE)
