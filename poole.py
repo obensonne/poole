@@ -45,8 +45,8 @@ from BaseHTTPServer import HTTPServer
 try:
     import markdown
 except ImportError:
-    print("abort  : need python-markdown, get it from "
-          "http://www.freewisdom.org/projects/python-markdown/Installation")
+    print("abort  : need Markdown, get it from "
+          "https://pypi.python.org/pypi/Markdown")
     sys.exit(1)
 
 HERE = os.path.dirname(os.path.realpath(__file__))
