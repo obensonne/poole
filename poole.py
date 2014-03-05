@@ -40,12 +40,7 @@ import urllib.parse
 from http.server import SimpleHTTPRequestHandler
 from http.server import HTTPServer
 
-try:
-    import markdown
-except ImportError:
-    print("abort  : need Markdown, get it from "
-          "https://pypi.python.org/pypi/Markdown")
-    sys.exit(1)
+import markdown
 
 UTF8 = 'UTF8'
 
