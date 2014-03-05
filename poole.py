@@ -42,12 +42,7 @@ import urlparse
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 
-try:
-    import markdown
-except ImportError:
-    print("abort  : need Markdown, get it from "
-          "https://pypi.python.org/pypi/Markdown")
-    sys.exit(1)
+import markdown
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
