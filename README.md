@@ -25,7 +25,7 @@ yours).
 [flattr-img]: http://api.flattr.com/button/flattr-badge-large.png "Flattr this"
 
 [travis-url]: https://travis-ci.org/obensonne/poole
-[travis-img]: https://travis-ci.org/obensonne/poole.png?branch=master
+[travis-img]: https://travis-ci.org/obensonne/poole.png?branch=py3
 
 ## Requirements
 
