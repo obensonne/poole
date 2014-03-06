@@ -19,8 +19,13 @@ yours).
 
 [![Flattr this][flattr-img]][flattr-url]
 
+[![Build Status][travis-img][travis-url]
+
 [flattr-url]: http://flattr.com/thing/142425/Poole
 [flattr-img]: http://api.flattr.com/button/flattr-badge-large.png "Flattr this"
+
+[travis-url]: https://travis-ci.org/obensonne/poole
+[travis-img]: https://travis-ci.org/obensonne/poole.png?branch=master
 
 ## Requirements
 
