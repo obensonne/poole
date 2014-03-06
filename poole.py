@@ -23,7 +23,6 @@
 #
 # =============================================================================
 
-import codecs
 import glob
 import imp
 import optparse
@@ -299,7 +298,7 @@ def init(project, theme):
 
     for fname, content in EXAMPLE_FILES.items():
         print('info: create example %r' % fname)
-        with open(opj(project, fname), 'w') as fp:
+        with open(opj(project, fname), 'w', encoding=UTF8) as fp:
             fp.write(content)
 
     if theme != 'minimal':
@@ -387,7 +386,7 @@ class Page(dict):
         if virtual:
             self.raw = virtual
         else:
-            with codecs.open(fname, 'r', UTF8) as fp:
+            with open(fname, 'r', encoding=UTF8) as fp:
                 self.raw = fp.readlines()
 
         # split raw content into macro definitions and real content
@@ -612,7 +611,7 @@ def build(project, opts):
     # render complete HTML pages
     # -------------------------------------------------------------------------
 
-    with codecs.open(opj(project, "page.html"), 'r', UTF8) as fp:
+    with open(opj(project, "page.html"), 'r', encoding=UTF8) as fp:
         skeleton = fp.read()
 
     for page in pages:
@@ -634,7 +633,7 @@ def build(project, opts):
         # write HTML page
         fname = page.fname.replace(dir_in, dir_out)
         fname = re.sub(MKD_PATT, ".html", fname)
-        with codecs.open(fname, 'w', UTF8) as fp:
+        with open(fname, 'w', encoding=UTF8) as fp:
             fp.write(out)
 
     print("success: built project")
