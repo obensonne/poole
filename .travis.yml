@@ -1,0 +1,8 @@
+language: python
+python:
+  - "3.2"
+  - "3.3"
+install:
+  - "pip install markdown"
+script:
+  - "cd tests && python run.py"
