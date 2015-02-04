@@ -711,7 +711,7 @@ def options():
                   help="encoding of output pages (default: utf-8)")
     og.add_option("", "--filename-enc", default="utf-8", metavar="ENC",
                   help="encoding of file names (default: utf-8)")
-    op.add_option("" , "--dry-run", action="store_true", default=False,
+    og.add_option("" , "--dry-run", action="store_true", default=False,
                   help="go through the rendering process without actually outputting/deleting any files")
     op.add_option_group(og)
 
