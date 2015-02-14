@@ -570,7 +570,8 @@ def build(project, opts):
                         f_src = opj(cwd, f)
                         f_dst = opj(dir_out, cwd_site, f)
                         f_dst = '%s.%s' % (os.path.splitext(f_dst)[0], ext)
-                        print('info   : convert %s (%s)' % (f_src, func.__name__))
+                        print('info   : convert %s (%s)' %
+                            (f_src, func.__name__))
                         if not opts.dry_run:
                             func(f_src, f_dst)
                         break
@@ -695,7 +696,8 @@ def options():
     og = optparse.OptionGroup(op, "Init options")
     og.add_option("", "--theme", type="choice", default="minimal",
                   choices=THEME_NAMES,
-                  help="theme for a new project (choices: %s)" % ', '.join(THEME_NAMES))
+                  help="theme for a new project (choices: %s)" %
+                    ', '.join(THEME_NAMES))
     op.add_option_group(og)
 
     og = optparse.OptionGroup(op, "Build options")
@@ -712,7 +714,8 @@ def options():
     og.add_option("", "--filename-enc", default="utf-8", metavar="ENC",
                   help="encoding of file names (default: utf-8)")
     og.add_option("" , "--dry-run", action="store_true", default=False,
-                  help="go through the rendering process without actually outputting/deleting any files")
+                  help="go through the rendering process without actually "
+                    "outputting/deleting any files")
     op.add_option_group(og)
 
     og = optparse.OptionGroup(op, "Serve options")
