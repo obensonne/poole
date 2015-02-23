@@ -508,13 +508,14 @@ def build(project, opts):
             sys.exit(1)
 
     # prepare output directory
-    for fod in glob.glob(opj(dir_out, "*")):
-        if os.path.isdir(fod):
-            shutil.rmtree(fod)
-        else:
-            os.remove(fod)
-    if not opx(dir_out):
-        os.mkdir(dir_out)
+    if not opts.dry_run:
+        for fod in glob.glob(opj(dir_out, "*")):
+            if os.path.isdir(fod):
+                shutil.rmtree(fod)
+            else:
+                os.remove(fod)
+        if not opx(dir_out):
+            os.mkdir(dir_out)
 
     # macro module
     fname = opj(opts.project, "macros.py")
@@ -542,11 +543,12 @@ def build(project, opts):
 
     for cwd, dirs, files in os.walk(dir_in):
         cwd_site = cwd[len(dir_in):].lstrip(os.path.sep)
-        for sdir in dirs[:]:
-            if re.search(opts.ignore, opj(cwd_site, sdir)):
-                dirs.remove(sdir)
-            else:
-                os.mkdir(opj(dir_out, cwd_site, sdir))
+        if not opts.dry_run:
+            for sdir in dirs[:]:
+                if re.search(opts.ignore, opj(cwd_site, sdir)):
+                    dirs.remove(sdir)
+                else:
+                    os.mkdir(opj(dir_out, cwd_site, sdir))
         for f in files:
             if re.search(opts.ignore, opj(cwd_site, f)):
                 pass
@@ -560,16 +562,19 @@ def build(project, opts):
                         f_src = opj(cwd, f)
                         f_dst = opj(dir_out, cwd_site, f)
                         f_dst = '%s.%s' % (os.path.splitext(f_dst)[0], ext)
-                        print('info   : convert %s (%s)' % (f_src, func.__name__))
-                        func(f_src, f_dst)
+                        print('info   : convert %s (%s)' %
+                            (f_src, func.__name__))
+                        if not opts.dry_run:
+                            func(f_src, f_dst)
                         break
                 else:
-                    src = opj(cwd, f)
-                    try:
-                        shutil.copy(src, opj(dir_out, cwd_site))
-                    except OSError:
-                        # some filesystems like FAT won't allow shutil.copy
-                        shutil.copyfile(src, opj(dir_out, cwd_site, f))
+                    if not opts.dry_run:
+                        src = opj(cwd, f)
+                        try:
+                            shutil.copy(src, opj(dir_out, cwd_site))
+                        except OSError:
+                            # some filesystems like FAT won't allow shutil.copy
+                            shutil.copyfile(src, opj(dir_out, cwd_site, f))
 
     pages.sort(key=lambda p: int(p.get("sval", "0")))
 
@@ -633,10 +638,14 @@ def build(project, opts):
         # write HTML page
         fname = page.fname.replace(dir_in, dir_out)
         fname = re.sub(MKD_PATT, ".html", fname)
-        with open(fname, 'w', encoding=UTF8) as fp:
-            fp.write(out)
+        if not opts.dry_run:
+            with open(fname, 'w', encoding=UTF8) as fp:
+                fp.write(out)
 
-    print("success: built project")
+    if opts.dry_run:
+        print("success: built project (dry-run)")
+    else:
+        print("success: built project")
 
 # =============================================================================
 # serve site
@@ -679,7 +688,8 @@ def options():
     og = optparse.OptionGroup(op, "Init options")
     og.add_option("", "--theme", type="choice", default="minimal",
                   choices=THEME_NAMES,
-                  help="theme for a new project (choices: %s)" % ', '.join(THEME_NAMES))
+                  help="theme for a new project (choices: %s)" %
+                    ', '.join(THEME_NAMES))
     op.add_option_group(og)
 
     og = optparse.OptionGroup(op, "Build options")
@@ -689,6 +699,9 @@ def options():
                   help="input files to ignore (default: '^\.|~$')")
     og.add_option("" , "--md-ext", default=[], metavar="EXT",
                   action="append", help="enable a markdown extension")
+    og.add_option("" , "--dry-run", action="store_true", default=False,
+                  help="go through the rendering process without actually "
+                    "outputting/deleting any files")
     op.add_option_group(og)
 
     og = optparse.OptionGroup(op, "Serve options")

@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+import glob
 
 HERE = os.path.dirname(__file__)
 POOLE = os.path.join(HERE, "..", "poole.py")
@@ -20,6 +21,7 @@ if os.path.exists(ERRORS):
     os.remove(ERRORS)
 
 cmd_init = [POOLE, ACTUAL, "--init"]
+cmd_build_dry_run = [POOLE, ACTUAL, "--build", "--dry-run"]
 cmd_build = [POOLE, ACTUAL, "--build"]
 cmd_diff = ["diff", "-Naur", EXPECTED, ACTUAL]
 
@@ -27,8 +29,20 @@ r = subprocess.call(cmd_init, stdout=subprocess.PIPE)
 if r != EX_OK:
     sys.exit(1)
 
+r = subprocess.call(cmd_build_dry_run, stdout=subprocess.PIPE)
+if r != EX_OK:
+    sys.exit(1)
+
+generated = glob.glob(os.path.join(ACTUAL, "output", "*"))
+if generated != []:
+    sys.exit(1)
+
 r = subprocess.call(cmd_build, stdout=subprocess.PIPE)
 if r != EX_OK:
+    sys.exit(1)
+
+generated = glob.glob(os.path.join(ACTUAL, "output", "*"))
+if generated == []:
     sys.exit(1)
 
 p = subprocess.Popen(cmd_diff, stdout=subprocess.PIPE)
