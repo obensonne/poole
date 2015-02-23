@@ -23,8 +23,6 @@
 #
 # =============================================================================
 
-from __future__ import with_statement
-
 import codecs
 import glob
 import imp

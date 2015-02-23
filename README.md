@@ -32,7 +32,7 @@ yours).
 **You** should know Markdown and optionally Python if you want to use Poole's
 dirty content generation capability.
 
-**Your system** should have installed Python ≥ 2.5 and [python-markdown][pymd].
+**Your system** should have installed Python ≥ 2.7 and [python-markdown][pymd].
 Poole has been tested on Linux but should also work on other Unix systems and
 Windows (in theory, [report an issue][issues] if it fails).
 
