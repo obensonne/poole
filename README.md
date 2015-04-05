@@ -78,7 +78,8 @@ Run `poole.py --build` whenever you've made some changes in the *input* folder.
 
 Poole takes files from a project's `input` directory and copies them to the
 `output` directory. In this process files ending with *md*, *mkd*, *mdown* or
-*markdown* get converted to HTML using the project's `page.html` as a skeleton.
+*markdown* get converted to HTML using the project's `page.html` as a skeleton,
+or define a custom layout skeleton for each page.
 
 Additionally Poole expands any macros used in a page. Don't care about that for
 now ..
@@ -127,6 +128,14 @@ Minimal `page.html`:
 It's easy to apply one of the numerous free CSS templates out there to a Poole
 site. For more information read [this blog post with step-by-step
 instructions][pimp].
+
+Additionally you can add the Property `layout` in the FrontMatter of each page:
+
+    title: Some Title here
+    layout: custom_layout.html
+    ---
+
+In that case the given file is used as the page skeleton instead of the default `page.html` file.
 
 [pimp]: http://obensonne.bitbucket.org/blog/20091122-using-a-free-css-templates-in-poole.html
 
