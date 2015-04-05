@@ -8,3 +8,4 @@ tests/errors.diff
 box
 SNAPSHOT*
 .settings
+.idea/
