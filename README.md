@@ -32,7 +32,7 @@ yours).
 **You** should know Markdown and optionally Python if you want to use Poole's
 dirty content generation capability.
 
-**Your system** should have installed Python ≥ 2.5 and [python-markdown][pymd].
+**Your system** should have installed Python ≥ 2.7 and [python-markdown][pymd].
 Poole has been tested on Linux but should also work on other Unix systems and
 Windows (in theory, [report an issue][issues] if it fails).
 
@@ -78,7 +78,8 @@ Run `poole.py --build` whenever you've made some changes in the *input* folder.
 
 Poole takes files from a project's `input` directory and copies them to the
 `output` directory. In this process files ending with *md*, *mkd*, *mdown* or
-*markdown* get converted to HTML using the project's `page.html` as a skeleton.
+*markdown* get converted to HTML using the project's `page.html` as a template
+(unless a custom template is set on an individual page).
 
 Additionally Poole expands any macros used in a page. Don't care about that for
 now ..
@@ -127,6 +128,16 @@ Minimal `page.html`:
 It's easy to apply one of the numerous free CSS templates out there to a Poole
 site. For more information read [this blog post with step-by-step
 instructions][pimp].
+
+In case you need special templates for individual pages, you can add the
+property `tempalte` in the front matter of each page:
+
+    title: This looks different
+    template: a-special-page-template.html
+    ---
+
+In that case the given file is used as the page template instead of the default
+`page.html` file.
 
 [pimp]: http://obensonne.bitbucket.org/blog/20091122-using-a-free-css-templates-in-poole.html
 

@@ -617,16 +617,23 @@ def build(project, opts):
     # -------------------------------------------------------------------------
 
     with open(opj(project, "page.html"), 'r', encoding=UTF8) as fp:
-        skeleton = fp.read()
+        default_template = fp.read()
 
     for page in pages:
+
+        if 'template' in page:
+            fname = opj(project, page['template'])
+            with open(fname, 'r', opts.input_enc) as fp:
+                template = fp.read()
+        else:
+            template = default_template
 
         print("info   : render %s" % page.url)
 
         # replace expressions and statements in page.html
         macros["page"] = page
         macros["__content__"] = page.html
-        out = regx_eval.sub(repl_eval, skeleton)
+        out = regx_eval.sub(repl_eval, template)
         out = regx_exec.sub(repl_exec, out)
 
         # un-escape escaped python code blocks
