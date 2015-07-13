@@ -623,26 +623,23 @@ def build(project, opts):
     # -------------------------------------------------------------------------
 
     with codecs.open(opj(project, "page.html"), 'r', opts.input_enc) as fp:
-        skeleton = fp.read()
+        default_template = fp.read()
 
     for page in pages:
 
-        page_skeleton = None
-        if 'layout' in page.keys():
-            with codecs.open(opj(project, page['layout']), 'r', opts.input_enc) as fp:
-                page_skeleton = fp.read()
+        if 'template' in page:
+            fname = opj(project, page['template'])
+            with codecs.open(fname, 'r', opts.input_enc) as fp:
+                template = fp.read()
+        else:
+            template = default_template
 
         print("info   : render %s" % page.url)
 
         # replace expressions and statements in page.html
         macros["page"] = page
         macros["__content__"] = page.html
-
-        if page_skeleton is not None:
-            out = regx_eval.sub(repl_eval, page_skeleton)
-        else:
-            out = regx_eval.sub(repl_eval, skeleton)
-
+        out = regx_eval.sub(repl_eval, template)
         out = regx_exec.sub(repl_exec, out)
 
         # un-escape escaped python code blocks
